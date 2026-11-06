@@ -1,0 +1,2420 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Mahmoud chat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f4f6fa; --surface: #ffffff; --surface2: #eef1f6; --ink: #101828; --muted: #667085; --line: #e6eaf0;
+    --p: #14b8a6; --p2: #0ea5e9; --grad: linear-gradient(135deg, #14b8a6 0%, #0ea5e9 100%);
+    --other: #eef1f6; --otherText: #101828; --chatbg: #f6f8fb; --shadow: 0 1px 3px rgba(16,24,40,.08);
+    --danger: #e5484d; --tint: rgba(20,184,166,.12); --badge: 70px;
+  }
+  [data-theme=dark] {
+    --bg: #0a101c; --surface: #121a2b; --surface2: #1b2640; --ink: #e8edf6; --muted: #8fa0bd; --line: #223049;
+    --other: #1e2a45; --otherText: #e8edf6; --chatbg: #0d1525; --shadow: none; --tint: rgba(20,184,166,.2);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; font-family: 'Tajawal', system-ui, 'Segoe UI', Tahoma, Arial, sans-serif; color: var(--ink); background: var(--bg); }
+  button, input, textarea { font-family: inherit; color: inherit; }
+  svg { display: block; }
+  #app { height: 100dvh; max-width: 760px; margin: 0 auto; background: var(--bg); display: flex; flex-direction: column; position: relative; overflow: hidden; }
+  @media (min-width: 780px) { #app { box-shadow: 0 0 40px rgba(16,24,40,.15); } }
+  .screen { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+  .splash { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: var(--surface); }
+
+  /* header */
+  header.top { background: var(--surface); padding: 8px 10px; padding-top: calc(8px + env(safe-area-inset-top)); display: flex; align-items: center; gap: 6px; flex-shrink: 0; border-bottom: 1px solid var(--line); min-height: 58px; }
+  header.top .htitle { flex: 1; font-size: 19px; font-weight: 800; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; min-width: 0; }
+  .brand { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .ib { background: none; border: 0; color: var(--ink); width: 42px; height: 42px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 0; }
+  .ib:active { background: var(--surface2); }
+  .ib.acc { color: var(--p); background: var(--tint); }
+  .ib.acc:active { background: var(--surface2); }
+  .hbtn { background: none; border: 0; padding: 0; cursor: pointer; display: flex; flex-shrink: 0; }
+  header.top input.sinput { flex: 1; min-width: 0; background: var(--surface2); border: 0; border-radius: 22px; padding: 10px 16px; font-size: 16px; outline: none; }
+  header.top input.sinput::placeholder { color: var(--muted); }
+  .avatar { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 20px; flex-shrink: 0; overflow: hidden; }
+  .avatar img, .bigav img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  header.top .avatar { width: 38px; height: 38px; font-size: 16px; }
+
+  /* lists */
+  .list { flex: 1; overflow-y: auto; }
+  .searchbar { margin: 10px 12px 4px; background: var(--surface2); border-radius: 22px; padding: 11px 16px; display: flex; gap: 10px; align-items: center; color: var(--muted); cursor: pointer; font-size: 15px; }
+  .row { display: flex; align-items: center; gap: 13px; padding: 11px 14px; cursor: pointer; background: var(--bg); }
+  .row:active { background: var(--surface2); }
+  .row .info { flex: 1; min-width: 0; }
+  .row .name { font-weight: 700; font-size: 16px; }
+  .row .sub { color: var(--muted); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+  .row .sub.bold { font-weight: 700; color: var(--ink); }
+  .row .meta { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+  .row .time.hot { color: var(--p); font-weight: 700; }
+  .badge { background: var(--grad); color: #fff; border-radius: 12px; min-width: 22px; text-align: center; padding: 1px 7px; font-size: 12px; font-weight: 700; }
+  .empty { text-align: center; color: var(--muted); padding: 40px 28px; line-height: 1.9; }
+  .empty .ill { width: 150px; height: auto; margin: 0 auto 8px; }
+  .ill .b { fill: var(--surface); stroke: var(--line); stroke-width: 2; }
+  .fab { position: absolute; bottom: calc(24px + var(--badge)); inset-inline-end: 20px; width: 58px; height: 58px; border-radius: 50%; border: 0; background: var(--grad); color: #fff; box-shadow: 0 8px 20px rgba(14,165,233,.4); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .fab:active { transform: scale(.94); }
+
+  /* chat */
+  .msgs { flex: 1; overflow-y: auto; padding: 12px 10px; display: flex; flex-direction: column; gap: 4px; background: var(--chatbg); }
+  .more { align-self: center; border: 0; background: var(--surface); color: var(--p); border-radius: 18px; padding: 7px 16px; font-size: 13px; cursor: pointer; box-shadow: var(--shadow); margin-bottom: 6px; }
+  .empty-chat { margin: auto; text-align: center; color: var(--muted); line-height: 1.8; }
+  .empty-chat .ill { width: 130px; height: auto; margin: 0 auto; }
+  .bubble { max-width: 78%; padding: 8px 13px 6px; border-radius: 20px; font-size: 16px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; position: relative; user-select: text; }
+  .bubble.mine { align-self: flex-start; background: var(--grad); color: #fff; border-end-start-radius: 6px; }
+  .bubble.other { align-self: flex-end; background: var(--other); color: var(--otherText); border-end-end-radius: 6px; }
+  .bubble.big { background: none !important; font-size: 46px; padding: 0 4px; line-height: 1.2; }
+  .bubble.deleted { background: transparent !important; border: 1px dashed var(--line); color: var(--muted) !important; font-style: italic; }
+  .bubble .t { font-size: 10.5px; opacity: .8; display: flex; align-items: center; gap: 4px; margin-top: 2px; white-space: normal; }
+  .tk2 { display: inline-flex; }
+  .tk2 svg + svg { margin-inline-start: -8px; }
+  .bubble .mimg { max-width: 100%; max-height: 320px; border-radius: 14px; display: block; margin-bottom: 4px; cursor: zoom-in; }
+  .fcard { display: flex; align-items: center; gap: 10px; background: rgba(127,127,127,.16); border-radius: 14px; padding: 9px 10px; cursor: pointer; min-width: 190px; margin-bottom: 3px; white-space: normal; }
+  .ficon { width: 40px; height: 40px; border-radius: 12px; background: rgba(255,255,255,.28); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .finfo { min-width: 0; }
+  .fname { font-weight: 700; font-size: 14px; word-break: break-all; }
+  .fsize { font-size: 12px; opacity: .8; }
+  .blockbar { display: none; padding: 16px; text-align: center; background: var(--surface); border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; flex-direction: column; gap: 10px; padding-bottom: calc(16px + var(--badge)); }
+  .composer { display: flex; align-items: flex-end; gap: 4px; padding: 8px 8px calc(8px + env(safe-area-inset-bottom) + var(--badge)); background: var(--surface); border-top: 1px solid var(--line); flex-shrink: 0; }
+  .cb { width: 40px; height: 40px; border-radius: 50%; border: 0; background: none; color: var(--p); display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; overflow: hidden; flex-shrink: 0; padding: 0; }
+  .cb:active { background: var(--tint); }
+  .cb input, .pick input, .opt input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; font-size: 0; margin: 0; }
+  .pill { flex: 1; background: var(--surface2); border-radius: 22px; display: flex; align-items: flex-end; min-width: 0; }
+  .pill textarea { flex: 1; border: 0; background: none; outline: none; resize: none; font-size: 16px; padding: 10px 14px; max-height: 120px; line-height: 1.4; min-width: 0; }
+  .pill textarea::placeholder { color: var(--muted); }
+  .composer.typing .extra { display: none; }
+  .sendbtn { width: 40px; height: 40px; border-radius: 50%; border: 0; background: none; color: var(--p); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; padding: 0; }
+  .sendbtn svg { transform: scaleX(-1); }
+  .sendbtn.like svg { transform: none; }
+
+  /* sheets, dialogs, banner, toast */
+  .sheet-back { position: fixed; inset: 0; background: rgba(8,12,24,.5); z-index: 20; display: flex; align-items: flex-end; justify-content: center; }
+  .sheet-back.mid { align-items: center; padding: 20px; }
+  .sheet { background: var(--surface); width: 100%; max-width: 760px; border-radius: 24px 24px 0 0; padding: 16px 14px calc(18px + env(safe-area-inset-bottom)); }
+  .sheet.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 20px 16px calc(22px + env(safe-area-inset-bottom)); }
+  .opt { position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 4px; border-radius: 18px; background: var(--surface2); font-size: 14px; font-weight: 500; cursor: pointer; color: var(--ink); }
+  .opt .oi { color: var(--p); }
+  .act { width: 100%; display: flex; align-items: center; gap: 14px; padding: 15px 12px; border: 0; background: none; font-size: 16px; cursor: pointer; border-radius: 14px; text-align: start; }
+  .act:active { background: var(--surface2); }
+  .act.danger { color: var(--danger); }
+  .dlg { background: var(--surface); border-radius: 22px; padding: 22px; width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 12px; max-height: 88vh; overflow-y: auto; }
+  .dlg h3 { margin: 0; font-size: 19px; }
+  .dlg p { margin: 0; color: var(--muted); line-height: 1.7; font-size: 14px; }
+  .dlg input { padding: 13px 14px; border: 1px solid var(--line); border-radius: 12px; font-size: 16px; outline: none; background: var(--bg); }
+  .dlg textarea { padding: 13px 14px; border: 1px solid var(--line); border-radius: 12px; font-size: 16px; outline: none; background: var(--bg); color: inherit; font-family: inherit; min-height: 96px; resize: vertical; }
+  .bubble .t .ed { font-style: italic; }
+  .diag { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.6; }
+  .diag .ok { color: #16a34a; } .diag .no { color: var(--danger); }
+  .banner { position: fixed; top: calc(10px + env(safe-area-inset-top)); left: 50%; transform: translate(-50%, -140%); width: min(92%, 560px); background: var(--surface); color: var(--ink); border-radius: 18px; box-shadow: 0 10px 30px rgba(16,24,40,.28); padding: 10px 12px; display: flex; gap: 10px; align-items: center; z-index: 60; cursor: pointer; transition: transform .3s; border: 1px solid var(--line); }
+  .banner.on { transform: translate(-50%, 0); }
+  .banner .bt { min-width: 0; flex: 1; }
+  .banner .bn { font-weight: 700; font-size: 15px; }
+  .banner .bm { color: var(--muted); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .toast { position: fixed; bottom: calc(96px + var(--badge)); left: 50%; transform: translateX(-50%) translateY(20px); background: rgba(16,24,40,.94); color: #fff; padding: 11px 18px; border-radius: 22px; font-size: 14px; z-index: 70; opacity: 0; pointer-events: none; transition: .25s; max-width: 88%; text-align: center; line-height: 1.6; }
+  .toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* viewer */
+  .viewer { position: fixed; inset: 0; background: rgba(2,6,23,.96); z-index: 30; display: flex; flex-direction: column; color: #fff; }
+  .viewer .ib { color: #fff; }
+  .vhead { display: flex; align-items: center; gap: 10px; padding: 10px 12px; padding-top: calc(10px + env(safe-area-inset-top)); }
+  .vtitle { flex: 1; font-weight: 700; word-break: break-all; font-size: 15px; }
+  .vbody { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 8px; }
+  .vbody img, .vbody video { max-width: 100%; max-height: 100%; border-radius: 10px; }
+  .vbody audio { width: 90%; }
+  .vfile { text-align: center; font-size: 15px; line-height: 2; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .vinfo { text-align: center; font-size: 13px; color: #94a3b8; min-height: 20px; padding: 0 12px; }
+  .vfoot { display: flex; gap: 10px; padding: 12px 12px calc(14px + env(safe-area-inset-bottom)); }
+  .vbtn { flex: 1; border: 0; border-radius: 14px; padding: 13px; font-size: 16px; font-weight: 700; background: #fff; color: #101828; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+
+  /* calls */
+  .callscreen, .incoming { position: fixed; inset: 0; z-index: 50; background: linear-gradient(160deg, #0b1220, #1e3a5f 58%, #0f766e); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: calc(48px + env(safe-area-inset-top)) 20px calc(40px + env(safe-area-inset-bottom)); overflow: hidden; }
+  .callscreen .rv { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; pointer-events: none; }
+  .callscreen.hasremote .rv { opacity: 1; }
+  .callscreen.hasremote .cinfo .bigav { display: none; }
+  .cinfo { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; text-shadow: 0 1px 6px rgba(0,0,0,.5); }
+  .cname { font-size: 27px; font-weight: 700; }
+  .cstatus { font-size: 16px; opacity: .92; }
+  .cinfo.ringing .bigav { animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,.45); } 70% { box-shadow: 0 0 0 26px rgba(255,255,255,0); } 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); } }
+  .lv { position: absolute; top: calc(14px + env(safe-area-inset-top)); inset-inline-start: 14px; width: 96px; height: 132px; object-fit: cover; border-radius: 14px; border: 2px solid rgba(255,255,255,.7); background: #000; display: none; z-index: 2; transform: scaleX(-1); }
+  .callscreen.video .lv { display: block; }
+  .cbar { position: relative; z-index: 1; display: flex; gap: 24px; align-items: center; }
+  .cc { width: 64px; height: 64px; border-radius: 50%; border: 0; background: rgba(255,255,255,.2); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
+  .cc.end { background: #ef4444; }
+  .cc.end svg { transform: rotate(135deg); }
+  .cc.accept { background: #22c55e; }
+
+  /* auth */
+  .auth { display: flex; flex-direction: column; height: 100%; overflow-y: auto; background: var(--bg); }
+  .hero { padding: calc(30px + env(safe-area-inset-top)) 20px 14px; text-align: center; background: linear-gradient(180deg, var(--tint), transparent); display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .hero h1 { margin: 6px 0 0; font-size: 30px; font-weight: 800; }
+  .hero p { margin: 0; color: var(--muted); font-size: 15px; }
+  .card { background: var(--surface); border-radius: 28px 28px 0 0; padding: 20px 22px calc(26px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 12px; flex: 1; margin-top: 8px; box-shadow: 0 -4px 20px rgba(16,24,40,.06); }
+  .tabs { display: flex; background: var(--surface2); border-radius: 14px; padding: 4px; }
+  .tabs button { flex: 1; border: 0; background: none; padding: 10px; border-radius: 11px; font-size: 15px; font-weight: 700; color: var(--muted); cursor: pointer; }
+  .tabs button.on { background: var(--surface); color: var(--p); box-shadow: var(--shadow); }
+  .card input[type=text], .card input[type=email], .card input[type=password], .profile input[type=text] { padding: 14px 15px; border: 1px solid var(--line); border-radius: 13px; font-size: 16px; outline: none; width: 100%; background: var(--bg); }
+  .card input:focus, .profile input:focus { border-color: var(--p); box-shadow: 0 0 0 3px var(--tint); }
+  .cta { border: 0; border-radius: 14px; padding: 14px; font-size: 17px; font-weight: 700; color: #fff; background: var(--grad); cursor: pointer; box-shadow: 0 8px 18px rgba(14,165,233,.28); }
+  .cta:disabled { opacity: .6; }
+  .link { background: none; border: 0; color: var(--p); font-size: 14px; cursor: pointer; padding: 4px; font-weight: 500; }
+  .err { color: var(--danger); font-size: 14px; line-height: 1.6; }
+  .err.ok { color: #16a34a; }
+
+  /* settings / profile */
+  .page { flex: 1; overflow-y: auto; padding: 6px 0 calc(30px + env(safe-area-inset-bottom) + var(--badge)); }
+  .sgroup { background: var(--surface); border-radius: 18px; margin: 12px; overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--line); }
+  .stitle { margin: 16px 18px 0; font-size: 13px; color: var(--muted); font-weight: 700; }
+  .srow { display: flex; align-items: center; gap: 13px; padding: 13px 14px; cursor: pointer; border-bottom: 1px solid var(--line); background: var(--surface); }
+  .srow:last-child { border-bottom: 0; }
+  .srow:active { background: var(--surface2); }
+  .srow .st { flex: 1; min-width: 0; }
+  .srow .sl { font-size: 16px; font-weight: 500; }
+  .srow .ss { font-size: 12.5px; color: var(--muted); margin-top: 1px; }
+  .sico { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--tint); color: var(--p); flex-shrink: 0; }
+  .sico.red { background: rgba(229,72,77,.12); color: var(--danger); }
+  .srow.danger .sl { color: var(--danger); }
+  .chev { color: var(--muted); }
+  .sw { position: relative; width: 46px; height: 26px; flex-shrink: 0; }
+  .sw input { opacity: 0; position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; z-index: 1; }
+  .sw span { position: absolute; inset: 0; background: #cbd5e1; border-radius: 13px; transition: .2s; }
+  .sw span::after { content: ''; position: absolute; top: 3px; inset-inline-start: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: .2s; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+  .sw input:checked + span { background: var(--p); }
+  .sw input:checked + span::after { inset-inline-start: 23px; }
+  .pcardtop { display: flex; align-items: center; gap: 14px; padding: 16px 14px; cursor: pointer; background: var(--surface); }
+  .pcardtop .pn { font-weight: 800; font-size: 18px; }
+  .pcardtop .pm { color: var(--muted); font-size: 13px; }
+  .profile { flex: 1; overflow-y: auto; padding: 22px 16px calc(30px + env(safe-area-inset-bottom) + var(--badge)); display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .bigav { width: 124px; height: 124px; border-radius: 50%; color: #fff; font-size: 54px; font-weight: 700; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; border: 4px solid var(--surface); box-shadow: 0 6px 18px rgba(16,24,40,.2); }
+  .pcard { width: 100%; background: var(--surface); border-radius: 18px; padding: 14px; display: flex; flex-direction: column; gap: 10px; border: 1px solid var(--line); }
+  .btn { width: 100%; padding: 13px; border: 0; border-radius: 13px; font-size: 16px; font-weight: 700; cursor: pointer; background: var(--surface2); color: var(--ink); display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn.main { background: var(--grad); color: #fff; }
+  .btn.dfill { background: var(--danger); color: #fff; }
+  .btn.small { width: auto; padding: 8px 16px; font-size: 14px; }
+  .pick { position: relative; overflow: hidden; }
+  .cc.on { background: #fff; color: #0b1220; }
+  .htwrap { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .htwrap .htitle { font-size: 17px; flex: none; }
+  .hsub { font-size: 12px; color: var(--muted); display: flex; gap: 4px; align-items: center; }
+  .hsub.typ { color: var(--p); font-weight: 700; }
+  .encnote { align-self: center; background: var(--surface); color: var(--muted); font-size: 12px; padding: 6px 12px; border-radius: 12px; display: flex; gap: 6px; align-items: center; margin-bottom: 6px; box-shadow: var(--shadow); text-align: center; }
+  .reactrow { display: flex; justify-content: space-around; padding: 6px 4px 12px; border-bottom: 1px solid var(--line); margin-bottom: 6px; }
+  .rbtn { border: 0; background: none; font-size: 28px; padding: 6px 8px; border-radius: 14px; cursor: pointer; }
+  .rbtn.on { background: var(--tint); }
+  .rbtn:active { transform: scale(1.2); }
+  .rx { display: inline-flex; align-self: flex-start; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 12px; padding: 0 7px; font-size: 13px; margin-top: 3px; box-shadow: var(--shadow); }
+  .banner { display: block; padding: 8px 12px 10px; }
+  .banner .bl { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .banner .bicon { width: 18px; height: 18px; border-radius: 5px; }
+  .banner .bnow { margin-inline-start: auto; }
+  .banner .brow { display: flex; gap: 10px; align-items: center; }
+  .rbtn.plus { color: var(--muted); display: flex; align-items: center; justify-content: center; width: 44px; }
+  .sheet.epick { padding: 10px 8px calc(14px + env(safe-area-inset-bottom)); max-height: 62vh; display: flex; flex-direction: column; }
+  .etabs { display: flex; justify-content: space-around; border-bottom: 1px solid var(--line); padding-bottom: 6px; margin-bottom: 6px; flex-shrink: 0; }
+  .etab { border: 0; background: none; font-size: 24px; padding: 6px 10px; border-radius: 12px; cursor: pointer; }
+  .etab.on { background: var(--tint); }
+  .egrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; overflow-y: auto; min-height: 0; }
+  .ebtn { border: 0; background: none; font-size: 26px; padding: 7px 0; border-radius: 10px; cursor: pointer; }
+  .ebtn:active { background: var(--surface2); }
+  .rx { cursor: pointer; }
+  .pill .emo { width: 40px; height: 42px; color: var(--muted); flex-shrink: 0; }
+a.lnk{color:inherit;text-decoration:underline;word-break:break-all;direction:ltr;unicode-bidi:isolate}
+</style>
+</head>
+<body>
+<div id="app"><div class="splash"></div></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import {
+  getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  signOut, updateProfile, sendPasswordResetEmail, EmailAuthProvider,
+  reauthenticateWithCredential, deleteUser
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import {
+  initializeFirestore, getFirestore, persistentLocalCache, persistentMultipleTabManager,
+  collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteField, query, where, orderBy,
+  limit, onSnapshot, serverTimestamp, increment, writeBatch, arrayUnion, arrayRemove
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+/* ====== إعدادات يمكنك تعديلها ====== */
+const BADGE_SPACE = 70;     // مساحة فوق شارة Netlify السفلية (اجعلها 0 إن لم تظهر الشارة)
+const MAX_FILE_MB = 10;     // أقصى حجم للملف أو الفيديو
+const CHUNK = 600 * 1024;   // حجم كل جزء يُرفع إلى قاعدة البيانات
+const APP_ICON = "data:image/png;base64,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";
+/* =================================== */
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAy1DNs2zZjybvSXktTjsU91BOnwu6Q3Kc",
+  authDomain: "mahmoudchat-5d565.firebaseapp.com",
+  projectId: "mahmoudchat-5d565",
+  storageBucket: "mahmoudchat-5d565.firebasestorage.app",
+  messagingSenderId: "696004265754",
+  appId: "1:696004265754:web:012f3b65b161a35bb6cea3"
+};
+
+document.documentElement.style.setProperty('--badge', BADGE_SPACE + 'px');
+const app = document.getElementById('app');
+
+const fb = initializeApp(firebaseConfig);
+const auth = getAuth(fb);
+let db;
+try {
+  db = initializeFirestore(fb, {
+    experimentalAutoDetectLongPolling: true,
+    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+  });
+} catch (e1) {
+  try { db = initializeFirestore(fb, { experimentalAutoDetectLongPolling: true }); }
+  catch (e2) { db = getFirestore(fb); }
+}
+
+/* ---------- أدوات عامة ---------- */
+function h(tag, attrs = {}, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === 'class') e.className = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else if (v !== false && v != null) e.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) {
+    if (k == null || k === false) continue;
+    e.append(k.nodeType ? k : document.createTextNode(String(k)));
+  }
+  return e;
+}
+function linkify(text) {
+  const out = [];
+  const re = /\b((?:https?:\/\/|www\.)[^\s<>"']+)/gi;
+  let last = 0, m;
+  while ((m = re.exec(text))) {
+    let url = m[1], trail = '';
+    const t = url.match(/[.,;:!?)\]،؟]+$/);
+    if (t) { trail = t[0]; url = url.slice(0, -trail.length); }
+    if (m.index > last) out.push(text.slice(last, m.index));
+    const href = /^https?:\/\//i.test(url) ? url : 'https://' + url;
+    const a = h('a', { href, target: '_blank', rel: 'noopener noreferrer', class: 'lnk' }, url);
+    a.addEventListener('click', ev => ev.stopPropagation());
+    out.push(a);
+    if (trail) out.push(trail);
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) out.push(text.slice(last));
+  return out.length ? out : [text];
+}
+function svgEl(markup) {
+  const t = document.createElement('template');
+  t.innerHTML = markup.trim();
+  return t.content.firstChild;
+}
+const show = (v) => app.replaceChildren(v);
+const chatIdFor = (a, b) => [a, b].sort().join('_');
+const pad = (n) => String(n).padStart(2, '0');
+const hhmm = (d) => pad(d.getHours()) + ':' + pad(d.getMinutes());
+const ms = (t) => (t && t.toMillis) ? t.toMillis() : Date.now();
+const initial = (n) => (n && n.length ? [...n][0] : '?');
+const sleep = (t) => new Promise(r => setTimeout(r, t));
+const getStored = (k) => { try { return localStorage.getItem(k); } catch (_) { return null; } };
+const setStored = (k, v) => { try { localStorage.setItem(k, v); } catch (_) {} };
+function listTime(t) {
+  const d = new Date(t), n = new Date();
+  if (d.toDateString() === n.toDateString()) return hhmm(d);
+  if (d.toDateString() === new Date(n - 86400000).toDateString()) return 'أمس';
+  return d.getDate() + '/' + (d.getMonth() + 1);
+}
+let cleanup = [];
+const clear = () => { cleanup.forEach(f => { try { f(); } catch (_) {} }); cleanup = []; };
+let me;
+let profile = { name: '', photo: '' };
+let blockedSet = new Set();
+const isBlocked = (u) => blockedSet.has(u);
+const otherOf = (c) => c.participants.find(u => u !== me.uid);
+
+/* ---------- المظهر ---------- */
+function currentTheme() {
+  const s = getStored('mc_theme');
+  if (s === 'dark' || s === 'light') return s;
+  return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+}
+function applyTheme() {
+  const t = currentTheme();
+  document.documentElement.setAttribute('data-theme', t);
+  const m = document.querySelector('meta[name=theme-color]');
+  if (m) m.setAttribute('content', t === 'dark' ? '#121a2b' : '#ffffff');
+}
+applyTheme();
+
+/* ---------- الأيقونات (خطية عصرية) ---------- */
+const ICONS = {
+  search: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+  back: '<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>',
+  chevron: '<polyline points="15 18 9 12 15 6"/>',
+  plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+  camera: '<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
+  image: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>',
+  phone: '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',
+  video: '<polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>',
+  'video-off': '<path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2m5.66 0H14a2 2 0 0 1 2 2v3.34l1 1L23 7v10"/><line x1="1" y1="1" x2="23" y2="23"/>',
+  mic: '<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>',
+  'mic-off': '<line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"/><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>',
+  send: '<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>',
+  like: '<path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>',
+  settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+  logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
+  trash: '<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+  bell: '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
+  moon: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',
+  ban: '<circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>',
+  user: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>',
+  check: '<polyline points="20 6 9 17 4 12"/>',
+  clock: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+  x: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+  more: '<circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="19" r="1.2"/>',
+  download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+  share: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',
+  copy: '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+  repeat: '<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',
+  file: '<path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/>',
+  film: '<rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/>',
+  volume: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>',
+  activity: '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
+  info: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>',
+  lock: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  smile: '<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>'
+};
+function ico(name, size = 22, sw = 2) {
+  return svgEl('<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' + sw + '" stroke-linecap="round" stroke-linejoin="round">' + (ICONS[name] || '') + '</svg>');
+}
+const setIcon = (btn, name, size = 26) => btn.replaceChildren(ico(name, size));
+function iconBtn(name, title, onclick, cls = 'ib') { return h('button', { class: cls, title, onclick }, ico(name, 22)); }
+
+/* ---------- ألوان الصور الرمزية ---------- */
+const GRADS = [['#f97316', '#ef4444'], ['#0ea5e9', '#6366f1'], ['#10b981', '#0d9488'], ['#ec4899', '#8b5cf6'], ['#f59e0b', '#84cc16'], ['#06b6d4', '#3b82f6']];
+function gradFor(name) {
+  let n = 0;
+  for (const ch of (name || '?')) n = (n * 31 + ch.codePointAt(0)) >>> 0;
+  const g = GRADS[n % GRADS.length];
+  return 'linear-gradient(135deg,' + g[0] + ',' + g[1] + ')';
+}
+function fillAvatar(el, name, photo) {
+  if (photo) {
+    el.style.background = '#e2e8f0';
+    el.replaceChildren(h('img', { src: 'data:image/jpeg;base64,' + photo }));
+  } else {
+    el.style.background = gradFor(name);
+    el.replaceChildren(initial(name));
+  }
+}
+function avatarEl(name, photo, cls = 'avatar') {
+  const el = h('div', { class: cls });
+  fillAvatar(el, name, photo);
+  return el;
+}
+
+/* ---------- تنبيهات داخل التطبيق ---------- */
+let toastEl, toastT;
+function toast(msg, t = 2600) {
+  if (!toastEl) { toastEl = h('div', { class: 'toast' }); document.body.append(toastEl); }
+  toastEl.textContent = msg;
+  toastEl.classList.add('on');
+  clearTimeout(toastT);
+  if (t > 0) toastT = setTimeout(() => toastEl.classList.remove('on'), t);
+}
+const hideToast = () => { if (toastEl) toastEl.classList.remove('on'); };
+
+let bannerEl = null, bannerT;
+function showBanner(name, text, photo, onTap) {
+  if (bannerEl) bannerEl.remove();
+  clearTimeout(bannerT);
+  const el = h('div', { class: 'banner' },
+    h('div', { class: 'bl' }, h('img', { class: 'bicon', src: APP_ICON, alt: '' }), h('span', {}, 'Mahmoud chat'), h('span', { class: 'bnow' }, 'الآن')),
+    h('div', { class: 'brow' }, avatarEl(name, photo), h('div', { class: 'bt' }, h('div', { class: 'bn' }, name), h('div', { class: 'bm' }, text))));
+  el.addEventListener('click', () => { el.remove(); bannerEl = null; onTap(); });
+  document.body.append(el);
+  bannerEl = el;
+  setTimeout(() => el.classList.add('on'), 20);
+  bannerT = setTimeout(() => { el.classList.remove('on'); setTimeout(() => { el.remove(); if (bannerEl === el) bannerEl = null; }, 350); }, 6500);
+}
+
+function modal(...kids) {
+  const back = h('div', { class: 'sheet-back mid' }, h('div', { class: 'dlg' }, ...kids));
+  back.addEventListener('click', ev => { if (ev.target === back) close(); });
+  document.body.append(back);
+  function close() { back.remove(); }
+  return { close };
+}
+function actionSheet(items, top) {
+  const back = h('div', { class: 'sheet-back', onclick: ev => { if (ev.target === back) back.remove(); } },
+    h('div', { class: 'sheet' }, top || null, items.map(it => h('button', {
+      class: 'act' + (it.danger ? ' danger' : ''),
+      onclick: () => { back.remove(); it.fn(); }
+    }, ico(it.icon, 22), it.label))));
+  document.body.append(back);
+  return back;
+}
+function onLongPress(el, fn) {
+  let t = null;
+  const cancel = () => { clearTimeout(t); t = null; };
+  el.addEventListener('touchstart', () => { cancel(); t = setTimeout(() => { t = null; el._lp = Date.now(); fn(); }, 480); });
+  ['touchend', 'touchmove', 'touchcancel'].forEach(ev => el.addEventListener(ev, cancel));
+  el.addEventListener('contextmenu', ev => { ev.preventDefault(); cancel(); el._lp = Date.now(); fn(); });
+}
+const justLongPressed = (el) => Date.now() - (el._lp || 0) < 800;
+
+/* ---------- الأصوات ---------- */
+let actx;
+function ac() {
+  try {
+    if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume();
+  } catch (_) {}
+  return actx;
+}
+function tone(freq, t0, dur, type, vol) {
+  const c = ac();
+  if (!c) return;
+  const o = c.createOscillator(), g = c.createGain();
+  const t = c.currentTime + t0;
+  o.type = type;
+  o.frequency.setValueAtTime(freq, t);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(vol, t + 0.015);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g);
+  g.connect(c.destination);
+  o.start(t);
+  o.stop(t + dur + 0.03);
+}
+const soundOn = () => getStored('mc_sound') !== '0';
+const notifOn = () => getStored('mc_notif') !== '0';
+function soundSend() {
+  if (!soundOn()) return;
+  tone(660, 0, 0.13, 'triangle', 0.2);
+  tone(990, 0.08, 0.15, 'triangle', 0.17);
+  tone(1320, 0.16, 0.24, 'sine', 0.13);
+}
+function soundRecv() {
+  if (!soundOn()) return;
+  tone(880, 0, 0.15, 'sine', 0.16);
+  tone(587, 0.12, 0.26, 'sine', 0.13);
+}
+
+/* ---------- رسومات ---------- */
+let logoN = 0;
+function logoSVG(size) {
+  const id = 'lg' + (++logoN);
+  return svgEl('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="' + size + '" height="' + size + '"><defs><linearGradient id="' + id + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#0891b2"/></linearGradient></defs><rect width="1024" height="1024" rx="230" fill="url(#' + id + ')"/><g fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"><path d="M270 674V294L512 534 754 294V674" stroke-width="84"/><path d="M438 756L512 584 586 756M463 698H561" stroke-width="36"/></g></svg>');
+}
+function emptyChatSVG() {
+  return svgEl('<svg class="ill" viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect class="b" x="14" y="10" width="92" height="60" rx="22"/><path class="b" d="M40 66l-10 22 30-18z"/><circle cx="46" cy="38" r="4" fill="#14b8a6"/><circle cx="74" cy="38" r="4" fill="#14b8a6"/><path d="M46 50q14 12 28 0" stroke="#0ea5e9" stroke-width="3" fill="none" stroke-linecap="round"/></svg>');
+}
+function searchIllSVG() {
+  return svgEl('<svg class="ill" viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle class="b" cx="52" cy="46" r="28"/><line x1="73" y1="67" x2="96" y2="90" stroke="#0ea5e9" stroke-width="9" stroke-linecap="round"/><path d="M40 46h24M52 34v24" stroke="#14b8a6" stroke-width="5" stroke-linecap="round" opacity=".7"/></svg>');
+}
+
+/* ---------- ملفات وصور ---------- */
+const blobToB64 = (blob) => new Promise((res, rej) => {
+  const r = new FileReader();
+  r.onload = () => res(String(r.result).split(',')[1] || '');
+  r.onerror = rej;
+  r.readAsDataURL(blob);
+});
+function b64ToBytes(b64) {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+const fmtSize = (n) => n < 1024 ? n + ' B' : n < 1048576 ? Math.round(n / 1024) + ' KB' : (n / 1048576).toFixed(1) + ' MB';
+function fileIconName(type) {
+  type = type || '';
+  if (type.startsWith('video/')) return 'film';
+  if (type.startsWith('audio/')) return 'volume';
+  if (type.startsWith('image/')) return 'image';
+  return 'file';
+}
+function loadImg(file) {
+  return new Promise((res, rej) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => { URL.revokeObjectURL(url); res(img); };
+    img.onerror = rej;
+    img.src = url;
+  });
+}
+async function compressImage(file, max = 1024) {
+  const img = await loadImg(file);
+  const s = Math.min(1, max / Math.max(img.width, img.height));
+  const c = document.createElement('canvas');
+  c.width = Math.round(img.width * s);
+  c.height = Math.round(img.height * s);
+  const g = c.getContext('2d');
+  g.fillStyle = '#fff';
+  g.fillRect(0, 0, c.width, c.height);
+  g.drawImage(img, 0, 0, c.width, c.height);
+  let q = 0.72, out;
+  do { out = c.toDataURL('image/jpeg', q).split(',')[1]; q -= 0.15; } while (out.length > 450000 && q > 0.2);
+  return out;
+}
+async function compressSquare(file, size = 192) {
+  const img = await loadImg(file);
+  const side = Math.min(img.width, img.height);
+  const sx = (img.width - side) / 2, sy = (img.height - side) / 2;
+  const c = document.createElement('canvas');
+  c.width = size; c.height = size;
+  c.getContext('2d').drawImage(img, sx, sy, side, side, 0, 0, size, size);
+  return c.toDataURL('image/jpeg', 0.75).split(',')[1];
+}
+
+function openViewer({ name, type, getBlob }) {
+  type = type || '';
+  let url = null, blob = null;
+  const body = h('div', { class: 'vbody' }, h('div', { class: 'vfile' }, 'جارٍ التحميل…'));
+  const info = h('div', { class: 'vinfo' });
+  function close() { if (url) URL.revokeObjectURL(url); v.remove(); }
+  function save() {
+    if (!blob) return;
+    if (window.NativeBridge && window.NativeBridge.saveFile) {
+      blobToB64(blob).then(b64 => window.NativeBridge.saveFile(name || 'file', blob.type || '', b64)).catch(() => toast('تعذّر الحفظ'));
+      return;
+    }
+    try {
+      const a = h('a', { href: url, download: name || 'file' });
+      document.body.append(a);
+      a.click();
+      a.remove();
+      toast('بدأ الحفظ. إن لم يظهر الملف في التنزيلات جرّب «مشاركة»', 5000);
+    } catch (e) { toast('تعذّر الحفظ، جرّب «مشاركة»'); }
+  }
+  async function share() {
+    if (!blob) return;
+    if (window.NativeBridge && window.NativeBridge.shareFile) {
+      blobToB64(blob).then(b64 => window.NativeBridge.shareFile(name || 'file', blob.type || '', b64)).catch(() => toast('تعذّرت المشاركة'));
+      return;
+    }
+    try {
+      const f = new File([blob], name || 'file', { type: blob.type });
+      if (navigator.canShare && navigator.canShare({ files: [f] })) await navigator.share({ files: [f], title: name });
+      else toast('المشاركة غير مدعومة هنا. جرّب «حفظ» أو افتح الموقع في Chrome', 5000);
+    } catch (e) { if (!e || e.name !== 'AbortError') toast('تعذّرت المشاركة'); }
+  }
+  const v = h('div', { class: 'viewer' },
+    h('div', { class: 'vhead' },
+      h('button', { class: 'ib', onclick: close }, ico('x', 24)),
+      h('div', { class: 'vtitle' }, name || '')),
+    body, info,
+    h('div', { class: 'vfoot' },
+      h('button', { class: 'vbtn', onclick: save }, ico('download', 20), 'حفظ'),
+      h('button', { class: 'vbtn', onclick: share }, ico('share', 20), 'مشاركة')));
+  document.body.append(v);
+
+  getBlob((d, t) => { info.textContent = 'جارٍ التحميل ' + d + '/' + t; })
+    .then(b => {
+      blob = b;
+      url = URL.createObjectURL(b);
+      info.textContent = fmtSize(b.size);
+      let el;
+      if (type.startsWith('image/')) el = h('img', { src: url });
+      else if (type.startsWith('video/')) el = h('video', { src: url, controls: '', playsinline: '' });
+      else if (type.startsWith('audio/')) el = h('audio', { src: url, controls: '' });
+      else el = h('div', { class: 'vfile' }, ico(fileIconName(type), 56, 1.6), name || '');
+      body.replaceChildren(el);
+    })
+    .catch(e => { body.replaceChildren(h('div', { class: 'vfile' }, (e.message || 'تعذّر التحميل'))); });
+}
+async function fetchFileBlob(chatRef, msgId, f, onProgress, key) {
+  const parts = new Array(f.chunks);
+  const queue = [...Array(f.chunks).keys()];
+  let done = 0;
+  async function get(i) {
+    const s = await getDoc(doc(chatRef, 'messages', msgId + '_' + i));
+    if (!s.exists() || !s.data().data) throw new Error('الملف غير متوفر (حُذف أو لم يكتمل رفعه)');
+    if (f.enc) {
+      if (!key) throw new Error('تعذّر فك تشفير الملف على هذا الجهاز');
+      parts[i] = await aesDecBytes(key, s.data().data);
+    } else parts[i] = b64ToBytes(s.data().data);
+    done++;
+    if (onProgress) onProgress(done, f.chunks);
+  }
+  await Promise.all([0, 1, 2].map(async () => { while (queue.length) await get(queue.shift()); }));
+  return new Blob(parts, { type: f.type || 'application/octet-stream' });
+}
+
+/* ---------- التشفير من طرف إلى طرف (E2EE) ---------- */
+const subtle = (window.crypto && window.crypto.subtle) || null;
+const te = new TextEncoder(), td = new TextDecoder();
+function b64e(buf) {
+  const b = new Uint8Array(buf);
+  let s = '';
+  for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+const b64d = (s) => b64ToBytes(s);
+let myKeys = null;
+const pubCache = new Map(), chatKeys = new Map(), decCache = new Map(), prevCache = new Map();
+const ECDH = { name: 'ECDH', namedCurve: 'P-256' };
+const AES = { name: 'AES-GCM', length: 256 };
+const rnd = (n) => window.crypto.getRandomValues(new Uint8Array(n));
+
+async function genKeyPair() {
+  const kp = await subtle.generateKey(ECDH, true, ['deriveKey']);
+  return { privJwk: await subtle.exportKey('jwk', kp.privateKey), pubJwk: await subtle.exportKey('jwk', kp.publicKey) };
+}
+async function deriveShared(privKey, pubStr) {
+  const pub = await subtle.importKey('jwk', JSON.parse(pubStr), ECDH, false, []);
+  return subtle.deriveKey({ name: 'ECDH', public: pub }, privKey, AES, false, ['encrypt', 'decrypt']);
+}
+async function pwKey(password, salt) {
+  const base = await subtle.importKey('raw', te.encode(password), 'PBKDF2', false, ['deriveKey']);
+  return subtle.deriveKey({ name: 'PBKDF2', salt, iterations: 250000, hash: 'SHA-256' }, base, AES, false, ['encrypt', 'decrypt']);
+}
+async function wrapPriv(privJwk, password) {
+  const salt = rnd(16), iv = rnd(12);
+  const k = await pwKey(password, salt);
+  const ct = await subtle.encrypt({ name: 'AES-GCM', iv }, k, te.encode(JSON.stringify(privJwk)));
+  return { s: b64e(salt), i: b64e(iv), c: b64e(ct) };
+}
+async function unwrapPriv(kb, password) {
+  const k = await pwKey(password, b64d(kb.s));
+  const pt = await subtle.decrypt({ name: 'AES-GCM', iv: b64d(kb.i) }, k, b64d(kb.c));
+  return JSON.parse(td.decode(pt));
+}
+async function aesEncJSON(key, obj) {
+  const iv = rnd(12);
+  const ct = await subtle.encrypt({ name: 'AES-GCM', iv }, key, te.encode(JSON.stringify(obj)));
+  return { iv: b64e(iv), ct: b64e(ct) };
+}
+async function aesDecJSON(key, iv, ct) {
+  const pt = await subtle.decrypt({ name: 'AES-GCM', iv: b64d(iv) }, key, b64d(ct));
+  return JSON.parse(td.decode(pt));
+}
+async function aesEncBytes(key, bytes) {
+  const iv = rnd(12);
+  const ct = new Uint8Array(await subtle.encrypt({ name: 'AES-GCM', iv }, key, bytes));
+  const out = new Uint8Array(12 + ct.length);
+  out.set(iv);
+  out.set(ct, 12);
+  return b64e(out);
+}
+async function aesDecBytes(key, b64) {
+  const all = b64d(b64);
+  return new Uint8Array(await subtle.decrypt({ name: 'AES-GCM', iv: all.subarray(0, 12) }, key, all.subarray(12)));
+}
+const sameKey = (a, b) => !!(a && b && a.x === b.x && a.y === b.y);
+
+/* تجهيز مفاتيح هذا الحساب على هذا الجهاز (userData=null يعني تعذّر قراءة الحساب، فلا نُنشئ مفاتيح جديدة) */
+async function setupKeys(u, userData, password) {
+  myKeys = null;
+  if (!subtle) return;
+  try {
+    const lsKey = 'mc_kp_' + u.uid;
+    let local = null;
+    try { local = JSON.parse(getStored(lsKey) || 'null'); } catch (_) {}
+    const use = async (privJwk, pubStr) => {
+      myKeys = { priv: await subtle.importKey('jwk', privJwk, ECDH, false, ['deriveKey']), pub: pubStr };
+      pubCache.set(u.uid, pubStr);
+    };
+    if (userData === null) {            // بدون اتصال: استخدم النسخة المحلية فقط
+      if (local && local.priv && local.pub) await use(local.priv, local.pub);
+      return;
+    }
+    const pubStr = userData.pub || null;
+    let pubJ = null;
+    try { pubJ = pubStr ? JSON.parse(pubStr) : null; } catch (_) {}
+    if (local && local.priv && pubJ && sameKey(pubJ, local.priv)) { await use(local.priv, pubStr); return; }
+    if (userData.kb && password && pubJ) {      // جهاز جديد: استعد المفتاح من النسخة الاحتياطية المحمية بكلمة المرور
+      try {
+        const pr = await unwrapPriv(userData.kb, password);
+        if (sameKey(pubJ, pr)) { setStored(lsKey, JSON.stringify({ priv: pr, pub: pubStr })); await use(pr, pubStr); return; }
+      } catch (_) {}
+    }
+    const kp = await genKeyPair();          // لا مفاتيح صالحة: أنشئ مفاتيح جديدة
+    const newPub = JSON.stringify(kp.pubJwk);
+    await setDoc(doc(db, 'users', u.uid), { pub: newPub, kb: password ? await wrapPriv(kp.privJwk, password) : deleteField() }, { merge: true });
+    setStored(lsKey, JSON.stringify({ priv: kp.privJwk, pub: newPub }));
+    await use(kp.privJwk, newPub);
+  } catch (_) { myKeys = null; }
+}
+async function peerPub(uid, force) {
+  if (!force && pubCache.has(uid)) return pubCache.get(uid);
+  const s = await getDoc(doc(db, 'users', uid));
+  const p = s.exists() ? (s.data().pub || null) : null;
+  if (p) pubCache.set(uid, p); else pubCache.delete(uid);
+  return p;
+}
+async function chatKey(uid, force) {
+  if (!subtle || !myKeys) return null;
+  const pub = await peerPub(uid, force);
+  if (!pub) return null;
+  const ck = uid + '|' + pub;
+  let k = chatKeys.get(ck);
+  if (!k) { k = await deriveShared(myKeys.priv, pub); chatKeys.set(ck, k); }
+  return k;
+}
+async function securityCode(uid) {
+  const a = myKeys && myKeys.pub, b = await peerPub(uid, true);
+  if (!a || !b) return null;
+  const pair = [[me.uid, a], [uid, b]].sort((x, y) => (x[0] < y[0] ? -1 : 1));
+  const hash = new Uint8Array(await subtle.digest('SHA-256', te.encode(pair[0][1] + '|' + pair[1][1])));
+  const groups = [];
+  for (let i = 0; i < 6; i++) groups.push(String(((hash[i * 3] << 16) | (hash[i * 3 + 1] << 8) | hash[i * 3 + 2]) % 100000).padStart(5, '0'));
+  return groups.join(' ');
+}
+/* تغليف رسالة: مشفرة إن توفر مفتاح الطرفين، وإلا نص عادي */
+async function sealMessage(otherUid, payload, preview) {
+  const key = await chatKey(otherUid);
+  if (key) {
+    const e = await aesEncJSON(key, payload);
+    const lm = await aesEncJSON(key, { t: preview });
+    return { msg: { v: 1, iv: e.iv, ct: e.ct }, last: { lastMessage: 'رسالة جديدة', lm }, enc: true };
+  }
+  return {
+    msg: { text: payload.text || '', ...(payload.image ? { image: payload.image } : {}), ...(payload.file ? { file: payload.file } : {}) },
+    last: { lastMessage: preview, lm: deleteField() }, enc: false
+  };
+}
+async function openMessage(otherUid, m) {
+  if (!m.ct) return m;
+  const ck = m.id + '|' + m.iv;
+  const cached = decCache.get(ck);
+  if (cached) return { ...m, ...cached };
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const key = await chatKey(otherUid, attempt === 1);
+      if (!key) break;
+      const p = await aesDecJSON(key, m.iv, m.ct);
+      const out = { text: p.text || '', image: p.image, file: p.file, edited: !!p.edited };
+      decCache.set(ck, out);
+      return { ...m, ...out };
+    } catch (_) {}
+  }
+  return { ...m, text: '', undecryptable: true };
+}
+function previewText(c) {
+  if (!c.lm) return c.lastMessage || '';
+  const k = c.id + '|' + c.lm.iv;
+  if (prevCache.has(k)) return prevCache.get(k);
+  prevCache.set(k, '…');
+  (async () => {
+    try { const key = await chatKey(otherOf(c)); prevCache.set(k, (await aesDecJSON(key, c.lm.iv, c.lm.ct)).t || ''); }
+    catch (_) { prevCache.set(k, 'رسالة مشفرة'); }
+    chatsSubs.forEach(f => f());
+  })();
+  return '…';
+}
+async function previewAsync(c) {
+  if (!c.lm) return c.lastMessage || '';
+  try { const key = await chatKey(otherOf(c)); return (await aesDecJSON(key, c.lm.iv, c.lm.ct)).t || ''; }
+  catch (_) { return 'رسالة جديدة'; }
+}
+
+/* ---------- الحساب ---------- */
+function authMsg(code) {
+  const m = {
+    'auth/invalid-email': 'البريد الإلكتروني غير صحيح',
+    'auth/user-not-found': 'البريد أو كلمة المرور غير صحيحة',
+    'auth/wrong-password': 'كلمة المرور غير صحيحة',
+    'auth/invalid-credential': 'البريد أو كلمة المرور غير صحيحة',
+    'auth/email-already-in-use': 'هذا البريد مسجّل من قبل',
+    'auth/weak-password': 'كلمة المرور ضعيفة (6 أحرف على الأقل)',
+    'auth/network-request-failed': 'تحقق من الاتصال بالإنترنت',
+    'auth/too-many-requests': 'محاولات كثيرة، انتظر قليلاً ثم أعد المحاولة',
+    'auth/requires-recent-login': 'سجّل الدخول من جديد ثم أعد المحاولة'
+  };
+  return m[code] || ('حدث خطأ: ' + code);
+}
+function loadAccounts() { try { return JSON.parse(getStored('mc_accounts') || '[]'); } catch (_) { return []; } }
+function saveAccount() {
+  if (!me) return;
+  const list = loadAccounts().filter(a => a.uid !== me.uid);
+  list.unshift({ uid: me.uid, email: me.email || '', name: profile.name, photo: profile.photo });
+  setStored('mc_accounts', JSON.stringify(list.slice(0, 5)));
+}
+function forgetAccount(uid) { setStored('mc_accounts', JSON.stringify(loadAccounts().filter(a => a.uid !== uid))); }
+
+async function saveProfile(newName, newPhoto) {
+  const u = auth.currentUser;
+  const data = {};
+  if (newName && newName !== profile.name) {
+    const dup = await getDocs(query(collection(db, 'users'), where('nameLower', '==', newName.toLowerCase()), limit(3)));
+    if (dup.docs.some(d => d.id !== u.uid)) throw new Error('اسم المستخدم مستخدم من قبل، اختر اسماً آخر');
+    data.name = newName;
+    data.nameLower = newName.toLowerCase();
+    await updateProfile(u, { displayName: newName });
+  }
+  if (newPhoto !== undefined) data.photo = newPhoto;
+  if (!Object.keys(data).length) return;
+  await setDoc(doc(db, 'users', u.uid), data, { merge: true });
+  const qs = await getDocs(query(collection(db, 'chats'), where('participants', 'array-contains', u.uid)));
+  if (qs.size) {
+    const b = writeBatch(db);
+    qs.docs.forEach(d => {
+      const upd = {};
+      if (data.name) upd['names.' + u.uid] = data.name;
+      if (newPhoto !== undefined) upd['photos.' + u.uid] = newPhoto;
+      b.update(d.ref, upd);
+    });
+    await b.commit();
+  }
+  profile = { ...profile, ...(data.name ? { name: data.name } : {}), ...(newPhoto !== undefined ? { photo: newPhoto } : {}) };
+  saveAccount();
+}
+async function removeAccount(password) {
+  const u = auth.currentUser;
+  const uid = u.uid;
+  await reauthenticateWithCredential(u, EmailAuthProvider.credential(u.email, password));
+  const qs = await getDocs(query(collection(db, 'chats'), where('participants', 'array-contains', uid)));
+  const b = writeBatch(db);
+  b.set(doc(db, 'users', uid), { deleted: true, name: '', nameLower: '', photo: '' }, { merge: true });
+  qs.docs.forEach(d => b.update(d.ref, { ['names.' + uid]: 'حساب محذوف', ['photos.' + uid]: '' }));
+  await b.commit();
+  forgetAccount(uid);
+  setStored('mc_kp_' + uid, '');
+  await deleteUser(u);
+}
+async function clearChat(otherUid) {
+  try {
+    await setDoc(doc(db, 'chats', chatIdFor(me.uid, otherUid)),
+      { clearedAt: { [me.uid]: serverTimestamp() }, unread: { [me.uid]: 0 } }, { merge: true });
+  } catch (e) { toast('تعذّر الحذف: ' + e.message, 4000); }
+}
+const clearedOf = (c) => { const t = c.clearedAt && c.clearedAt[me.uid]; return t && t.toMillis ? t.toMillis() : 0; };
+async function setBlocked(uid, on) {
+  try {
+    await setDoc(doc(db, 'users', me.uid), { blocked: on ? arrayUnion(uid) : arrayRemove(uid) }, { merge: true });
+    toast(on ? 'تم حظر المستخدم' : 'تم إلغاء الحظر');
+  } catch (e) { toast('تعذّر التنفيذ: ' + e.message, 4000); }
+}
+function logout() { if (confirm('هل تريد تسجيل الخروج؟')) signOutClean(); }
+
+/* ---------- المكالمات الصوتية والمرئية (WebRTC) ---------- */
+/* خادم TURN: شرط لنجاح المكالمات بين شبكتين مختلفتين (خاصة شبكات الجوال).
+   الخوادم العامة القديمة (openrelay) توقفت. سجّل مجاناً في dashboard.metered.ca ثم ضع اسم التطبيق ومفتاح API هنا،
+   أو أدخلهما من: الإعدادات ثم إعداد المكالمات. */
+const TURN_APP = '';   // اسم تطبيقك في Metered، مثل: myapp  (العنوان myapp.metered.live)
+const TURN_KEY = '';   // مفتاح API
+const STUN_ONLY = [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302', 'stun:stun.relay.metered.ca:80'] }];
+let iceCache = null;
+function turnConfig() {
+  let app = TURN_APP, key = TURN_KEY;
+  try { const l = JSON.parse(getStored('mc_turn') || 'null'); if (l && l.app && l.key) { app = l.app; key = l.key; } } catch (_) {}
+  return app && key ? { app, key } : null;
+}
+async function getIceServers(force) {
+  const cfg = turnConfig();
+  if (!cfg) return { servers: STUN_ONLY, turn: false };
+  const tag = cfg.app + '|' + cfg.key;
+  if (!force && iceCache && iceCache.k === tag && Date.now() - iceCache.t < 20 * 60 * 1000) return { servers: iceCache.servers, turn: true };
+  try {
+    const ctl = new AbortController();
+    const tm = setTimeout(() => ctl.abort(), 6000);
+    const r = await fetch('https://' + cfg.app + '.metered.live/api/v1/turn/credentials?apiKey=' + encodeURIComponent(cfg.key), { signal: ctl.signal });
+    clearTimeout(tm);
+    if (!r.ok) throw new Error('bad');
+    const servers = await r.json();
+    if (!Array.isArray(servers) || !servers.length) throw new Error('empty');
+    iceCache = { t: Date.now(), servers, k: tag };
+    return { servers, turn: true };
+  } catch (_) {
+    return iceCache && iceCache.k === tag ? { servers: iceCache.servers, turn: true } : { servers: STUN_ONLY, turn: false };
+  }
+}
+const CALL_RING_MS = 45000;
+let activeCall = null, incomingUI = null, lastIncomingId = null;
+const fmtDur = (s) => pad(Math.floor(s / 60)) + ':' + pad(s % 60);
+function nativeCall(on) { try { if (window.NativeBridge && window.NativeBridge.setCallMode) window.NativeBridge.setCallMode(on); } catch (_) {} }
+
+function startRing(mode) {
+  let stopped = false;
+  const play = () => {
+    if (stopped) return;
+    if (mode === 'in') { tone(784, 0, 0.18, 'sine', 0.2); tone(988, 0.2, 0.18, 'sine', 0.2); tone(1175, 0.4, 0.34, 'sine', 0.2); }
+    else { tone(440, 0, 0.9, 'sine', 0.08); }
+  };
+  play();
+  const iv = setInterval(play, mode === 'in' ? 1800 : 3000);
+  return () => { stopped = true; clearInterval(iv); };
+}
+async function logCall(chatRef, otherUid, text) {
+  try {
+    const sealed = await sealMessage(otherUid, { text }, text);
+    const b = writeBatch(db);
+    b.set(doc(collection(chatRef, 'messages')), { senderId: me.uid, ...sealed.msg, time: serverTimestamp(), read: false });
+    b.set(chatRef, { ...sealed.last, lastTime: serverTimestamp(), lastSender: me.uid, unread: { [otherUid]: increment(1) } }, { merge: true });
+    await b.commit();
+  } catch (_) {}
+}
+
+/* تحسين الصوت للشبكات الضعيفة: Opus بمعدل منخفض مع تصحيح الأخطاء وتوفير الإرسال أثناء الصمت */
+function tuneSdp(sdp) {
+  try {
+    const m = /a=rtpmap:(\d+) opus\/48000\/2/.exec(sdp);
+    if (!m) return sdp;
+    const pt = m[1];
+    const re = new RegExp('a=fmtp:' + pt + ' ([^\\r\\n]*)');
+    return sdp.replace(re, (all, params) => {
+      const ps = params.split(';').filter(Boolean);
+      const have = new Set(ps.map(p => p.split('=')[0]));
+      ['usedtx=1', 'useinbandfec=1', 'maxaveragebitrate=24000', 'stereo=0'].forEach(x => { if (!have.has(x.split('=')[0])) ps.push(x); });
+      return 'a=fmtp:' + pt + ' ' + ps.join(';');
+    });
+  } catch (_) { return sdp; }
+}
+function tuneSenders(c) {
+  try {
+    c.pc.getSenders().forEach(s => {
+      if (!s.track || !s.getParameters) return;
+      const p = s.getParameters();
+      if (!p.encodings || !p.encodings.length) p.encodings = [{}];
+      if (s.track.kind === 'audio') p.encodings[0].maxBitrate = 28000;
+      else { p.encodings[0].maxBitrate = 250000; p.encodings[0].maxFramerate = 15; }
+      s.setParameters(p).catch(() => {});
+    });
+  } catch (_) {}
+}
+
+function buildCallUI(c) {
+  const rv = h('video', { class: 'rv', autoplay: '', playsinline: '' });
+  const lv = h('video', { class: 'lv', autoplay: '', playsinline: '' });
+  lv.muted = true;
+  const status = h('div', { class: 'cstatus' }, '');
+  const btnMute = h('button', { class: 'cc', title: 'كتم الميكروفون' }, ico('mic', 26));
+  const btnSpk = h('button', { class: 'cc', title: 'مكبر الصوت' }, ico('volume', 26));
+  const btnCam = c.kind === 'video' ? h('button', { class: 'cc', title: 'الكاميرا' }, ico('video', 26)) : null;
+  const btnEnd = h('button', { class: 'cc end', title: 'إنهاء' }, ico('phone', 26));
+  const root = h('div', { class: 'callscreen' + (c.kind === 'video' ? ' video' : '') },
+    rv,
+    h('div', { class: 'cinfo' }, avatarEl(c.name, c.photo, 'bigav'), h('div', { class: 'cname' }, c.name || 'مستخدم'), status),
+    lv,
+    h('div', { class: 'cbar' }, btnMute, btnSpk, btnCam, btnEnd));
+  document.body.append(root);
+  return { root, rv, lv, status, btnMute, btnSpk, btnCam, btnEnd };
+}
+/* مكبر الصوت: يحاول التبديل بين السماعة الأذنية والمكبر، وإن لم يتيحه الجهاز يخفض الصوت في «الوضع الخاص» */
+async function setSpeaker(c, on, quiet) {
+  c.speaker = on;
+  if (window.NativeBridge && window.NativeBridge.setSpeaker) {
+    try { window.NativeBridge.setSpeaker(on); } catch (_) {}
+    c.routed = true;
+    c.ui.rv.volume = 1;
+    c.ui.btnSpk.classList.remove('on');
+    if (on) c.ui.btnSpk.classList.add('on');
+    return;
+  }
+  const el = c.ui.rv;
+  let routed = false;
+  try {
+    if (el.setSinkId && navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+      const outs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'audiooutput');
+      const spk = outs.find(d => /speaker|مكبر/i.test(d.label));
+      const ear = outs.find(d => /earpiece|receiver|handset|سماعة الأذن/i.test(d.label));
+      const pick = on ? (spk || outs.find(d => d.deviceId === 'default')) : ear;
+      if (pick) { await el.setSinkId(pick.deviceId); routed = !!(on ? spk : ear); }
+    }
+  } catch (_) {}
+  c.routed = routed;
+  el.volume = on ? 1 : (routed ? 1 : 0.4);
+  c.ui.btnSpk.classList.remove('on');
+  if (on) c.ui.btnSpk.classList.add('on');
+  if (!quiet && !on && !routed && !c.warnedRoute) {
+    c.warnedRoute = true;
+    toast('جهازك لا يتيح السماعة الأذنية للمواقع، لذا خُفض الصوت للوضع الخاص. اضغط المكبر لرفعه', 6000);
+  }
+}
+function wireControls(c) {
+  c.ui.btnEnd.addEventListener('click', () => endCall(c, 'ended'));
+  c.ui.btnMute.addEventListener('click', () => {
+    const t = c.localStream.getAudioTracks()[0];
+    if (!t) return;
+    t.enabled = !t.enabled;
+    setIcon(c.ui.btnMute, t.enabled ? 'mic' : 'mic-off');
+  });
+  c.ui.btnSpk.addEventListener('click', () => setSpeaker(c, !c.speaker, false));
+  if (c.ui.btnCam) c.ui.btnCam.addEventListener('click', () => {
+    const t = c.localStream.getVideoTracks()[0];
+    if (!t) return;
+    t.enabled = !t.enabled;
+    c.userVideoOff = !t.enabled;
+    c.autoVideoOff = false;
+    setIcon(c.ui.btnCam, t.enabled ? 'video' : 'video-off');
+  });
+  if (c.kind === 'video') c.ui.lv.srcObject = c.localStream;
+  setSpeaker(c, c.kind === 'video', true);
+}
+/* مراقبة جودة الشبكة: إيقاف الفيديو تلقائياً عند الضعف للحفاظ على الصوت */
+function startMonitor(c) {
+  clearInterval(c.mon);
+  c.mon = setInterval(async () => {
+    if (c.ended || !c.pc) return;
+    try {
+      const stats = await c.pc.getStats();
+      let lost = 0, recv = 0, rtt = null;
+      stats.forEach(r => {
+        if (r.type === 'inbound-rtp' && (r.kind === 'audio' || r.mediaType === 'audio')) { lost = r.packetsLost || 0; recv = r.packetsReceived || 0; }
+        if (r.type === 'candidate-pair' && (r.nominated || r.state === 'succeeded') && r.currentRoundTripTime != null) rtt = r.currentRoundTripTime * 1000;
+      });
+      const dl = lost - (c.lastLost || 0), dr = recv - (c.lastRecv || 0);
+      c.lastLost = lost; c.lastRecv = recv;
+      const lossPct = (dl + dr) > 0 ? dl / (dl + dr) * 100 : 0;
+      const poor = lossPct > 8 || (rtt != null && rtt > 600);
+      c.poorCount = poor ? (c.poorCount || 0) + 1 : 0;
+      c.goodCount = !poor ? (c.goodCount || 0) + 1 : 0;
+      c.weak = c.poorCount >= 2;
+      if (c.kind === 'video') {
+        const vt = c.localStream.getVideoTracks()[0];
+        if (vt && c.weak && vt.enabled && !c.userVideoOff) { vt.enabled = false; c.autoVideoOff = true; toast('أُوقف الفيديو مؤقتاً لتحسين الصوت بسبب ضعف الشبكة', 4500); }
+        else if (vt && c.autoVideoOff && c.goodCount >= 4) { vt.enabled = true; c.autoVideoOff = false; }
+      }
+    } catch (_) {}
+  }, 3000);
+}
+function onConnected(c) {
+  if (c.connectedAt || c.ended) return;
+  c.connectedAt = Date.now();
+  if (c.stopRing) { c.stopRing(); c.stopRing = null; }
+  clearTimeout(c.timeout);
+  clearTimeout(c.connTimeout);
+  tuneSenders(c);
+  startMonitor(c);
+  c.ui.status.textContent = '00:00';
+  c.timer = setInterval(() => {
+    c.ui.status.textContent = fmtDur(Math.floor((Date.now() - c.connectedAt) / 1000)) + (c.weak ? ' · الشبكة ضعيفة' : '');
+  }, 1000);
+}
+function armConnTimeout(c) {
+  clearTimeout(c.connTimeout);
+  c.connTimeout = setTimeout(() => {
+    if (!c.connectedAt && !c.ended) {
+      toast('تعذّر توصيل الصوت بين الجهازين. غالباً الشبكة تمنع المكالمات أو ضعيفة جداً. جرّب Wi-Fi أو افحص المكالمات من الإعدادات', 7000);
+      endCall(c, 'ended');
+    }
+  }, 40000);
+}
+const peerAlive = (c) => !!c.pc && (c.pc.connectionState === 'connected' || c.pc.iceConnectionState === 'connected' || c.pc.iceConnectionState === 'completed');
+/* إعادة تفعيل الاتصال عند انقطاع الشبكة (يبدؤها المتصل فقط) */
+async function restartIce(c) {
+  if (c.role !== 'caller' || c.ended || c.restarting || (c.restarts || 0) >= 4) return false;
+  c.restarting = true;
+  c.restarts = (c.restarts || 0) + 1;
+  if (c.hasTurn && c.restarts === 2) { try { const cfg = c.pc.getConfiguration(); cfg.iceTransportPolicy = 'relay'; c.pc.setConfiguration(cfg); } catch (_) {} }
+  try {
+    const offer = await c.pc.createOffer({ iceRestart: true });
+    offer.sdp = tuneSdp(offer.sdp);
+    await c.pc.setLocalDescription(offer);
+    await updateDoc(c.callRef, { offer: { type: offer.type, sdp: offer.sdp }, restart: c.restarts });
+    if (c.ui) c.ui.status.textContent = 'إعادة الاتصال…';
+    setTimeout(() => { c.restarting = false; }, 9000);
+    return true;
+  } catch (_) { c.restarting = false; return false; }
+}
+async function recover(c, failed) {
+  if (c.ended || peerAlive(c)) return;
+  const giveUp = () => {
+    clearTimeout(c.failTimer);
+    c.failTimer = setTimeout(() => {
+      if (!c.ended && !peerAlive(c)) { toast('انقطع الاتصال بسبب ضعف الشبكة', 5000); endCall(c, 'ended'); }
+    }, 25000);
+  };
+  if (c.role === 'caller') {
+    if (await restartIce(c)) { giveUp(); return; }
+    if (failed) { toast('تعذّر الاتصال. قد تكون الشبكة تمنع المكالمات', 5000); endCall(c, 'ended'); }
+  } else if (failed) giveUp();
+}
+function makePeer(c, onLocalIce, servers) {
+  const pc = new RTCPeerConnection({ iceServers: servers || STUN_ONLY, iceCandidatePoolSize: 2, bundlePolicy: 'max-bundle' });
+  c.pc = pc;
+  c.localStream.getTracks().forEach(t => pc.addTrack(t, c.localStream));
+  pc.ontrack = ev => {
+    c.ui.rv.srcObject = ev.streams[0];
+    const pr = c.ui.rv.play && c.ui.rv.play();
+    if (pr && pr.catch) pr.catch(() => {});
+    if (c.kind === 'video') c.ui.root.classList.add('hasremote');
+    setSpeaker(c, !!c.speaker, true);
+  };
+  pc.onicecandidate = ev => {
+    if (ev.candidate) onLocalIce(JSON.stringify(ev.candidate.toJSON ? ev.candidate.toJSON() : ev.candidate));
+  };
+  const check = () => {
+    if (c.ended) return;
+    const st = pc.connectionState, ist = pc.iceConnectionState;
+    if (st === 'connected' || ist === 'connected' || ist === 'completed') { clearTimeout(c.discTimer); clearTimeout(c.failTimer); c.restarting = false; onConnected(c); }
+    else if (st === 'failed' || ist === 'failed') { clearTimeout(c.discTimer); recover(c, true); }
+    else if (st === 'disconnected' || ist === 'disconnected') {
+      if (c.connectedAt && c.ui) c.ui.status.textContent = 'إعادة الاتصال…';
+      clearTimeout(c.discTimer);
+      c.discTimer = setTimeout(() => recover(c, false), 5000);
+    }
+  };
+  pc.onconnectionstatechange = check;
+  pc.oniceconnectionstatechange = check;
+  return pc;
+}
+function addIce(c, s) { try { c.pc.addIceCandidate(JSON.parse(s)).catch(() => {}); } catch (_) {} }
+function ingestIce(c, arr) {
+  while (c.seenIce < arr.length) {
+    const s = arr[c.seenIce++];
+    if (c.remoteReady) addIce(c, s); else c.iceQueue.push(s);
+  }
+}
+function drainIce(c) { c.iceQueue.splice(0).forEach(s => addIce(c, s)); }
+
+function finish(c, reason) {
+  if (c.ended) return;
+  c.ended = true;
+  clearTimeout(c.timeout); clearTimeout(c.connTimeout); clearTimeout(c.discTimer); clearTimeout(c.failTimer);
+  clearInterval(c.timer); clearInterval(c.mon);
+  if (c.stopRing) c.stopRing();
+  if (c.unsub) c.unsub();
+  try { if (c.pc) c.pc.close(); } catch (_) {}
+  if (c.localStream) c.localStream.getTracks().forEach(t => t.stop());
+  if (c.ui) c.ui.root.remove();
+  if (activeCall === c) activeCall = null;
+  nativeCall(false);
+  if (c.role === 'caller') {
+    const lbl = c.kind === 'video' ? 'مرئية' : 'صوتية';
+    const secs = c.connectedAt ? Math.floor((Date.now() - c.connectedAt) / 1000) : 0;
+    let text;
+    if (c.connectedAt) text = 'مكالمة ' + lbl + ' · ' + fmtDur(secs);
+    else if (reason === 'missed') text = 'مكالمة ' + lbl + ' فائتة';
+    else if (reason === 'declined') text = 'مكالمة ' + lbl + ' مرفوضة';
+    else text = 'مكالمة ' + lbl + ' ملغاة';
+    logCall(c.chatRef, c.other, text);
+  }
+}
+function endCall(c, reason) {
+  if (!c || c.ended) return;
+  const state = reason === 'missed' ? 'missed' : 'ended';
+  updateDoc(c.callRef, { state }).catch(() => {});
+  updateDoc(c.chatRef, { 'call.state': state }).catch(() => {});
+  finish(c, reason);
+}
+async function getMedia(kind) {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.RTCPeerConnection) {
+    toast('المكالمات غير مدعومة في هذا التطبيق. افتح الموقع في Chrome أو ثبّته من «إضافة إلى الشاشة الرئيسية»', 7000);
+    return null;
+  }
+  const audio = { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 };
+  const video = kind === 'video'
+    ? { facingMode: 'user', width: { ideal: 320, max: 480 }, height: { ideal: 240, max: 360 }, frameRate: { ideal: 15, max: 20 } }
+    : false;
+  try {
+    return await navigator.mediaDevices.getUserMedia({ audio, video });
+  } catch (e) {
+    try { if (kind === 'video') return await navigator.mediaDevices.getUserMedia({ audio: true, video: true }); } catch (_) {}
+    const nm = e && e.name;
+    let msg = 'تعذّر فتح الميكروفون' + (kind === 'video' ? ' أو الكاميرا' : '') + ' (' + (nm || 'خطأ') + ').';
+    if (nm === 'NotAllowedError' || nm === 'SecurityError') msg = 'لم يُسمح باستخدام الميكروفون' + (kind === 'video' ? ' أو الكاميرا' : '') + '. فعّل الإذن من إعدادات التطبيق في الهاتف. وإن لم ينفع فالتطبيق المحوَّل لا يمنح الأذونات، افتح الموقع في Chrome.';
+    else if (nm === 'NotFoundError') msg = 'لا يوجد ميكروفون' + (kind === 'video' ? ' أو كاميرا' : '') + ' في هذا الجهاز.';
+    else if (nm === 'NotReadableError') msg = 'الميكروفون مستخدم من تطبيق آخر. أغلقه ثم أعد المحاولة.';
+    toast(msg, 8000);
+    return null;
+  }
+}
+
+async function startCall(otherUid, otherName, otherPhoto, kind) {
+  if (activeCall) { toast('أنت في مكالمة بالفعل'); return; }
+  if (isBlocked(otherUid)) { toast('لقد حظرت هذا المستخدم. ألغِ الحظر أولاً'); return; }
+  const stream = await getMedia(kind);
+  if (!stream) return;
+  nativeCall(true);
+  const chatRef = doc(db, 'chats', chatIdFor(me.uid, otherUid));
+  const callRef = doc(chatRef, 'messages', 'call_current');
+  const id = String(Date.now());
+  const c = {
+    id, role: 'caller', kind, other: otherUid, name: otherName, photo: otherPhoto,
+    chatRef, callRef, localStream: stream, ended: false, seenIce: 0, iceQueue: [], remoteReady: false,
+    created: false, pendingIce: [], restarts: 0
+  };
+  activeCall = c;
+  c.ui = buildCallUI(c);
+  wireControls(c);
+  c.ui.status.textContent = 'جارٍ الاتصال…';
+  c.stopRing = startRing('out');
+  try {
+    const ice = await getIceServers();
+    c.hasTurn = ice.turn;
+    const pc = makePeer(c, s => {
+      if (c.created) updateDoc(callRef, { callerIce: arrayUnion(s) }).catch(() => {});
+      else c.pendingIce.push(s);
+    }, ice.servers);
+    const offer = await pc.createOffer();
+    offer.sdp = tuneSdp(offer.sdp);
+    await pc.setLocalDescription(offer);
+    await setDoc(callRef, {
+      senderId: me.uid, id, callerId: me.uid, calleeId: otherUid, kind, state: 'ringing',
+      offer: { type: offer.type, sdp: offer.sdp }, callerIce: [], calleeIce: []
+    });
+    await setDoc(chatRef, {
+      participants: [me.uid, otherUid],
+      call: { id, from: me.uid, to: otherUid, kind, state: 'ringing', at: serverTimestamp() }
+    }, { merge: true });
+    c.created = true;
+    c.pendingIce.splice(0).forEach(s => updateDoc(callRef, { callerIce: arrayUnion(s) }).catch(() => {}));
+    c.ui.status.textContent = 'يرن…';
+    c.unsub = onSnapshot(callRef, snap => {
+      const d = snap.data();
+      if (!d || d.id !== id || c.ended) return;
+      if (d.answer && !pc.remoteDescription) {
+        pc.setRemoteDescription(d.answer).then(() => { c.remoteReady = true; drainIce(c); tuneSenders(c); }).catch(() => {});
+      } else if (d.answer && d.answerRestart && d.answerRestart === c.restarts && c.restarting) {
+        c.restarting = false;
+        pc.setRemoteDescription(d.answer).catch(() => {});
+      }
+      ingestIce(c, d.calleeIce || []);
+      if (d.state === 'accepted' && !c.connectedAt) {
+        if (c.stopRing) { c.stopRing(); c.stopRing = null; }
+        clearTimeout(c.timeout);
+        c.ui.status.textContent = 'جارٍ التوصيل…';
+        armConnTimeout(c);
+      }
+      if (d.state === 'declined') { toast('تم رفض المكالمة'); finish(c, 'declined'); }
+      else if (d.state === 'ended' || d.state === 'missed') finish(c, 'ended');
+    });
+    c.timeout = setTimeout(() => { if (!c.connectedAt) { toast('لا يوجد رد'); endCall(c, 'missed'); } }, CALL_RING_MS);
+  } catch (e) {
+    toast('تعذّر بدء المكالمة: ' + (e.code || e.message || ''), 6000);
+    finish(c, 'ended');
+  }
+}
+
+async function handleRestart(c, dd) {
+  try {
+    await c.pc.setRemoteDescription(dd.offer);
+    const a = await c.pc.createAnswer();
+    a.sdp = tuneSdp(a.sdp);
+    await c.pc.setLocalDescription(a);
+    await updateDoc(c.callRef, { answer: { type: a.type, sdp: a.sdp }, answerRestart: dd.restart });
+  } catch (_) {}
+}
+async function answerCall(info) {
+  if (activeCall) return;
+  const stream = await getMedia(info.kind);
+  const chatRef = doc(db, 'chats', info.chatId);
+  const callRef = doc(chatRef, 'messages', 'call_current');
+  if (!stream) {
+    updateDoc(callRef, { state: 'declined' }).catch(() => {});
+    updateDoc(chatRef, { 'call.state': 'declined' }).catch(() => {});
+    return;
+  }
+  nativeCall(true);
+  let c;
+  try {
+    const snap = await getDoc(callRef);
+    const d = snap.exists() ? snap.data() : null;
+    if (!d || d.id !== info.id || d.state !== 'ringing') {
+      stream.getTracks().forEach(t => t.stop());
+      nativeCall(false);
+      toast('انتهت المكالمة');
+      return;
+    }
+    c = {
+      id: info.id, role: 'callee', kind: info.kind, other: info.other, name: info.name, photo: info.photo,
+      chatRef, callRef, localStream: stream, ended: false, seenIce: 0, iceQueue: [], remoteReady: false, lastRestart: 0
+    };
+    activeCall = c;
+    c.ui = buildCallUI(c);
+    wireControls(c);
+    c.ui.status.textContent = 'جارٍ التوصيل…';
+    const ice = await getIceServers();
+    c.hasTurn = ice.turn;
+    const pc = makePeer(c, s => updateDoc(callRef, { calleeIce: arrayUnion(s) }).catch(() => {}), ice.servers);
+    await pc.setRemoteDescription(d.offer);
+    c.remoteReady = true;
+    const ans = await pc.createAnswer();
+    ans.sdp = tuneSdp(ans.sdp);
+    await pc.setLocalDescription(ans);
+    await updateDoc(callRef, { answer: { type: ans.type, sdp: ans.sdp }, state: 'accepted' });
+    updateDoc(chatRef, { 'call.state': 'accepted' }).catch(() => {});
+    ingestIce(c, d.callerIce || []);
+    drainIce(c);
+    tuneSenders(c);
+    armConnTimeout(c);
+    c.unsub = onSnapshot(callRef, sn => {
+      const dd = sn.data();
+      if (!dd || dd.id !== c.id || c.ended) return;
+      ingestIce(c, dd.callerIce || []);
+      if (dd.restart && dd.restart > c.lastRestart && dd.offer) { c.lastRestart = dd.restart; handleRestart(c, dd); }
+      if (dd.state === 'ended' || dd.state === 'missed' || dd.state === 'declined') finish(c, 'ended');
+    });
+  } catch (e) {
+    toast('تعذّر قبول المكالمة: ' + (e.code || e.message || ''), 6000);
+    if (c) finish(c, 'ended'); else stream.getTracks().forEach(t => t.stop());
+  }
+}
+
+function dismissIncoming() {
+  if (!incomingUI) return;
+  if (incomingUI.stop) incomingUI.stop();
+  clearTimeout(incomingUI.t);
+  incomingUI.root.remove();
+  incomingUI = null;
+}
+function declineIncoming(info) {
+  updateDoc(doc(db, 'chats', info.chatId, 'messages', 'call_current'), { state: 'declined' }).catch(() => {});
+  updateDoc(doc(db, 'chats', info.chatId), { 'call.state': 'declined' }).catch(() => {});
+  dismissIncoming();
+}
+function showIncoming(info) {
+  const stop = startRing('in');
+  try { if (navigator.vibrate) navigator.vibrate([400, 200, 400, 200, 400]); } catch (_) {}
+  const acc = h('button', { class: 'cc accept', title: 'قبول' }, ico('phone', 26));
+  const dec = h('button', { class: 'cc end', title: 'رفض' }, ico('phone', 26));
+  const root = h('div', { class: 'incoming' },
+    h('div', { class: 'cinfo ringing' },
+      avatarEl(info.name, info.photo, 'bigav'),
+      h('div', { class: 'cname' }, info.name || 'مستخدم'),
+      h('div', { class: 'cstatus' }, info.kind === 'video' ? 'اتصال مرئي وارد…' : 'اتصال صوتي وارد…')),
+    h('div', { class: 'cbar' }, dec, acc));
+  document.body.append(root);
+  incomingUI = { info, root, stop, t: setTimeout(dismissIncoming, 50000) };
+  acc.addEventListener('click', () => { const i = info; dismissIncoming(); answerCall(i); });
+  dec.addEventListener('click', () => declineIncoming(info));
+}
+
+/* فحص المكالمات: يحدد سبب عدم عملها */
+function gatherIce(servers) {
+  return new Promise(res => {
+    let stun = false, relay = false, fin = false;
+    let pc;
+    const done = () => {
+      if (fin) return;
+      fin = true;
+      clearTimeout(t);
+      try { if (pc) pc.close(); } catch (_) {}
+      res({ stun, relay });
+    };
+    const t = setTimeout(done, 7000);
+    try {
+      pc = new RTCPeerConnection({ iceServers: servers });
+      pc.createDataChannel('x');
+      pc.onicecandidate = ev => {
+        if (!ev.candidate) { done(); return; }
+        const c = ev.candidate.candidate || '';
+        if (c.indexOf(' typ srflx') > -1) stun = true;
+        if (c.indexOf(' typ relay') > -1) relay = true;
+      };
+      pc.createOffer().then(o => pc.setLocalDescription(o)).catch(done);
+    } catch (_) { done(); }
+  });
+}
+async function runDiagnostics() {
+  const out = h('div', { class: 'diagbox' }, h('p', {}, 'جارٍ الفحص… (حتى 10 ثوانٍ)'));
+  const m = modal(h('h3', {}, 'فحص المكالمات'), out, h('button', { class: 'btn', onclick: () => m.close() }, 'إغلاق'));
+  const rows = [];
+  const add = (label, ok, hint) => rows.push({ label, ok, hint });
+  const hasRTC = !!window.RTCPeerConnection;
+  add('دعم المكالمات (WebRTC)', hasRTC, 'هذا المتصفح أو التطبيق لا يدعم المكالمات. افتح الموقع في Chrome.');
+  const hasMedia = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+  add('واجهة الميكروفون والكاميرا', hasMedia, 'التطبيق المحوَّل لا يتيح الميكروفون. ثبّت الموقع من Chrome عبر «إضافة إلى الشاشة الرئيسية».');
+  if (hasMedia) {
+    try { const s = await navigator.mediaDevices.getUserMedia({ audio: true }); s.getTracks().forEach(t => t.stop()); add('إذن الميكروفون', true, ''); }
+    catch (e) { add('إذن الميكروفون', false, 'مرفوض (' + (e && e.name) + '). فعّل الإذن من إعدادات التطبيق في الهاتف، أو افتح الموقع في Chrome.'); }
+    try { const s = await navigator.mediaDevices.getUserMedia({ video: true }); s.getTracks().forEach(t => t.stop()); add('إذن الكاميرا', true, ''); }
+    catch (e) { add('إذن الكاميرا', false, 'مرفوض (' + (e && e.name) + '). مطلوب للمكالمات المرئية فقط.'); }
+    try {
+      const outs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'audiooutput');
+      add('تحويل الصوت إلى السماعة الأذنية', outs.some(d => /earpiece|receiver|handset|سماعة الأذن/i.test(d.label)), 'هذا التطبيق أو المتصفح لا يتيح للمواقع اختيار السماعة الأذنية، فيستخدم الوضع الخاص (صوت منخفض). التحويل الحقيقي يحتاج تطبيقاً أصلياً.');
+    } catch (_) {}
+  }
+  if (hasRTC) {
+    const ice = await getIceServers(true);
+    const r = await gatherIce(ice.servers);
+    add('إعداد خادم TURN', ice.turn, 'لم يُضبط خادم TURN أو بياناته خاطئة. بدونه تفشل المكالمات بين شبكات الجوال المختلفة. سجّل مجاناً في metered.ca ثم أدخل البيانات من الإعدادات ثم إعداد المكالمات.');
+    add('الوصول لخادم STUN', r.stun, 'لم تُكتشف شبكتك. المكالمات بين شبكتين مختلفتين قد تفشل.');
+    if (ice.turn) add('الاتصال بخادم التمرير TURN', r.relay, 'تعذّر الوصول لخادم التمرير. تحقق من الاسم والمفتاح أو من حصة الحساب المجاني.');
+  }
+  out.replaceChildren(...rows.map(r => h('div', { class: 'diag' },
+    h('span', { class: r.ok ? 'ok' : 'no' }, ico(r.ok ? 'check' : 'x', 20, 2.6)),
+    h('div', {}, h('div', {}, r.label), r.ok ? null : h('div', { style: 'color:var(--muted);font-size:13px' }, r.hint)))));
+}
+
+/* ---------- المراقبة العامة للمحادثات (مكالمات + إشعارات رسائل) ---------- */
+let watchUnsub = null, userUnsub = null;
+let chatsCache = [], chatsLoaded = false, chatsInit = true, openChatUid = null;
+const chatsSubs = new Set();
+const seenLast = new Map();
+function stopWatch() {
+  if (watchUnsub) { watchUnsub(); watchUnsub = null; }
+  if (userUnsub) { userUnsub(); userUnsub = null; }
+}
+function updateTitle() {
+  let total = 0;
+  chatsCache.forEach(c => { if (!isBlocked(otherOf(c))) total += (c.unread && c.unread[me.uid]) || 0; });
+  document.title = total ? '(' + total + ') Mahmoud chat' : 'Mahmoud chat';
+}
+let swReg = null;
+async function sysNotify(title, body, hash, tag) {
+  try {
+    if (window.NativeBridge && window.NativeBridge.notifyMsg) { window.NativeBridge.notifyMsg(title, body, hash); return true; }
+    if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return false;
+    const opts = { body, icon: APP_ICON, badge: APP_ICON, tag, lang: 'ar', dir: 'rtl', data: { hash } };
+    if (swReg && swReg.showNotification) { await swReg.showNotification(title, opts); return true; }
+    const n = new Notification(title, opts);
+    n.onclick = () => { try { window.focus(); } catch (_) {} location.hash = hash; n.close(); };
+    return true;
+  } catch (_) { return false; }
+}
+async function notifyMessage(c, other) {
+  const name = (c.names && c.names[other]) || '';
+  const photo = (c.photos && c.photos[other]) || '';
+  const text = await previewAsync(c);
+  const hash = 'chat/' + other + '/' + encodeURIComponent(name);
+  soundRecv();
+  if (document.hidden) await sysNotify(name, text, hash, 'c_' + c.id);
+  else showBanner(name, text, photo, () => { location.hash = hash; });
+}
+function handleCall(c) {
+  const cl = c.call;
+  if (!cl) return;
+  if (incomingUI && incomingUI.info.id === cl.id && cl.state !== 'ringing') { dismissIncoming(); return; }
+  const age = cl.at ? Date.now() - ms(cl.at) : 1e9;
+  const fresh = age < 90000 && age > -120000;
+  if (cl.state === 'ringing' && cl.from !== me.uid && fresh && !activeCall && !incomingUI && cl.id !== lastIncomingId && !isBlocked(cl.from)) {
+    lastIncomingId = cl.id;
+    showIncoming({
+      chatId: c.id, id: cl.id, other: cl.from, kind: cl.kind,
+      name: (c.names && c.names[cl.from]) || '',
+      photo: (c.photos && c.photos[cl.from]) || ''
+    });
+  }
+}
+function handleMsg(c, snap) {
+  const lt = ms(c.lastTime);
+  const prev = seenLast.get(c.id);
+  seenLast.set(c.id, lt);
+  if (chatsInit || !c.lastSender || c.lastSender === me.uid) return;
+  if (lt <= (prev || 0) || snap.metadata.fromCache) return;
+  const other = otherOf(c);
+  if (isBlocked(other) || !notifOn()) return;
+  if (openChatUid === other && !document.hidden) return;
+  notifyMessage(c, other);
+}
+function watchGlobal() {
+  stopWatch();
+  chatsLoaded = false; chatsInit = true; seenLast.clear(); chatsCache = [];
+  const q = query(collection(db, 'chats'), where('participants', 'array-contains', me.uid));
+  watchUnsub = onSnapshot(q, snap => {
+    chatsCache = snap.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }));
+    chatsLoaded = true;
+    chatsCache.forEach(c => { handleCall(c); handleMsg(c, snap); });
+    chatsInit = false;
+    updateTitle();
+    chatsSubs.forEach(f => f());
+  }, () => {});
+  userUnsub = onSnapshot(doc(db, 'users', me.uid), s => {
+    const d = s.exists() ? s.data() : {};
+    blockedSet = new Set(d.blocked || []);
+    if (s.exists() && !d.deleted) profile = { name: d.name || profile.name, photo: d.photo || '' };
+    saveAccount();
+    updateTitle();
+    chatsSubs.forEach(f => f());
+  }, () => {});
+}
+
+/* ---------- شاشة الدخول والتسجيل ---------- */
+const authState = { register: false, notice: '', email: '', pw: '' };
+function authView() {
+  const reg = authState.register;
+  const name = h('input', { type: 'text', placeholder: 'اسم المستخدم', autocomplete: 'username', maxlength: '30' });
+  const email = h('input', { type: 'email', placeholder: 'البريد الإلكتروني', dir: 'ltr', autocomplete: 'email' });
+  if (authState.email) email.value = authState.email;
+  const pass = h('input', { type: 'password', placeholder: 'كلمة المرور', autocomplete: reg ? 'new-password' : 'current-password' });
+  const pass2 = h('input', { type: 'password', placeholder: 'تأكيد كلمة المرور', autocomplete: 'new-password' });
+  const err = h('div', { class: 'err' }, authState.notice);
+  authState.notice = '';
+  const btn = h('button', { class: 'cta' }, reg ? 'إنشاء الحساب' : 'تسجيل الدخول');
+
+  async function submit() {
+    const e = email.value.trim(), p = pass.value, n = name.value.trim();
+    err.className = 'err';
+    if (!e || !p) { err.textContent = 'أدخل البريد الإلكتروني وكلمة المرور'; return; }
+    if (reg) {
+      if (n.length < 3) { err.textContent = 'اسم المستخدم 3 أحرف على الأقل'; return; }
+      if (p.length < 8) { err.textContent = 'كلمة المرور 8 أحرف على الأقل'; return; }
+      if (p !== pass2.value) { err.textContent = 'كلمتا المرور غير متطابقتين'; return; }
+    }
+    err.textContent = '';
+    btn.disabled = true;
+    try {
+      if (!reg) {
+        authState.pw = p;
+        await signInWithEmailAndPassword(auth, e, p);
+      } else {
+        authState.pw = p;
+        const c = await createUserWithEmailAndPassword(auth, e, p);
+        const dup = await getDocs(query(collection(db, 'users'), where('nameLower', '==', n.toLowerCase()), limit(1)));
+        if (!dup.empty) {
+          authState.register = true;
+          authState.notice = 'اسم المستخدم مستخدم من قبل، اختر اسماً آخر';
+          await c.user.delete();
+          return;
+        }
+        await updateProfile(c.user, { displayName: n });
+        await setDoc(doc(db, 'users', c.user.uid), {
+          name: n, nameLower: n.toLowerCase(), photo: '', createdAt: serverTimestamp()
+        }, { merge: true });
+        profile = { name: n, photo: '' };
+        route();
+      }
+    } catch (x) {
+      err.textContent = authMsg(x.code);
+      btn.disabled = false;
+    }
+  }
+  btn.addEventListener('click', submit);
+  (reg ? pass2 : pass).addEventListener('keydown', ev => { if (ev.key === 'Enter') submit(); });
+
+  const tab = (label, val) => h('button', {
+    class: reg === val ? 'on' : '',
+    onclick: () => { authState.register = val; show(authView()); }
+  }, label);
+  const forgot = h('button', { class: 'link', onclick: async () => {
+    const e = email.value.trim();
+    if (!e) { err.className = 'err'; err.textContent = 'اكتب بريدك الإلكتروني أولاً'; return; }
+    try {
+      await sendPasswordResetEmail(auth, e);
+      err.className = 'err ok';
+      err.textContent = 'أُرسل رابط إعادة تعيين كلمة المرور إلى بريدك (تفقّد الرسائل غير المرغوبة أيضاً)';
+    } catch (x) { err.className = 'err'; err.textContent = authMsg(x.code); }
+  } }, 'نسيت كلمة المرور؟');
+
+  return h('div', { class: 'auth' },
+    h('div', { class: 'hero' }, logoSVG(84), h('h1', { class: 'brand' }, 'Mahmoud chat'), h('p', {}, 'تواصل مع من تحب بسهولة وأمان')),
+    h('div', { class: 'card' },
+      h('div', { class: 'tabs' }, tab('تسجيل الدخول', false), tab('حساب جديد', true)),
+      reg ? name : null, email, pass, reg ? pass2 : null, err, btn, reg ? null : forgot));
+}
+
+/* ---------- القائمة الرئيسية ---------- */
+function homeView() {
+  const list = h('div', { class: 'list' });
+  const view = h('div', { class: 'screen' },
+    h('header', { class: 'top' },
+      h('button', { class: 'hbtn', title: 'الإعدادات', onclick: () => { location.hash = 'settings'; } },
+        avatarEl(profile.name, profile.photo)),
+      h('div', { class: 'htitle brand' }, 'Mahmoud chat'),
+      iconBtn('search', 'بحث', () => { location.hash = 'search'; })),
+    list,
+    h('button', { class: 'fab', title: 'محادثة جديدة', onclick: () => { location.hash = 'search'; } }, ico('edit', 24)));
+
+  function render() {
+    const items = chatsCache
+      .filter(c => c.lastMessage != null && ms(c.lastTime) > clearedOf(c) && !isBlocked(otherOf(c)))
+      .sort((a, b) => ms(b.lastTime) - ms(a.lastTime));
+    const bar = h('div', { class: 'searchbar', onclick: () => { location.hash = 'search'; } }, ico('search', 20), 'ابحث عن شخص لبدء محادثة');
+    if (!chatsLoaded) { list.replaceChildren(bar, h('div', { class: 'empty' }, 'جارٍ التحميل…')); return; }
+    if (!items.length) {
+      list.replaceChildren(bar, h('div', { class: 'empty' }, emptyChatSVG(), h('div', {}, 'لا توجد محادثات بعد'), h('div', {}, 'ابحث عن صديق بالاسم وابدأ المحادثة')));
+      return;
+    }
+    list.replaceChildren(bar, ...items.map(chatRow));
+  }
+  function chatRow(c) {
+    const other = otherOf(c);
+    const nm = (c.names && c.names[other]) || '';
+    const un = (c.unread && c.unread[me.uid]) || 0;
+    const preview = (c.lastSender === me.uid ? 'أنت: ' : '') + previewText(c);
+    const row = h('div', { class: 'row' },
+      avatarEl(nm, (c.photos && c.photos[other]) || ''),
+      h('div', { class: 'info' },
+        h('div', { class: 'name' }, nm),
+        h('div', { class: 'sub' + (un > 0 ? ' bold' : '') }, preview)),
+      h('div', { class: 'meta' },
+        h('span', { class: 'time' + (un > 0 ? ' hot' : '') }, listTime(ms(c.lastTime))),
+        un > 0 ? h('span', { class: 'badge' }, String(un)) : null));
+    row.addEventListener('click', () => {
+      if (justLongPressed(row)) return;
+      location.hash = 'chat/' + other + '/' + encodeURIComponent(nm);
+    });
+    onLongPress(row, () => actionSheet([
+      { icon: 'trash', label: 'حذف المحادثة', danger: true, fn: () => { if (confirm('حذف هذه المحادثة من عندك؟ (لن تُحذف عند الطرف الآخر)')) clearChat(other); } },
+      { icon: 'ban', label: 'حظر ' + nm, danger: true, fn: () => { if (confirm('حظر ' + nm + '؟')) setBlocked(other, true); } }
+    ]));
+    return row;
+  }
+  chatsSubs.add(render);
+  cleanup.push(() => chatsSubs.delete(render));
+  render();
+  return view;
+}
+
+/* ---------- البحث عن الأشخاص (لا يظهر أحد إلا بالبحث) ---------- */
+function searchView() {
+  const hint = () => h('div', { class: 'empty' }, searchIllSVG(), h('div', {}, 'ابحث عن شخص باسمه'), h('div', {}, 'اكتب حرفين على الأقل'));
+  const results = h('div', { class: 'list' }, hint());
+  const input = h('input', { class: 'sinput', placeholder: 'ابحث بالاسم…', autofocus: '' });
+  let timer, seq = 0;
+  const users = collection(db, 'users');
+  function paint(docs) {
+    const rows = docs
+      .filter(d => {
+        const u = d.data();
+        return d.id !== me.uid && !u.deleted && u.name && !isBlocked(d.id) && !(u.blocked || []).includes(me.uid);
+      })
+      .map(d => {
+        const u = d.data();
+        return h('div', { class: 'row', onclick: () => location.replace('#chat/' + d.id + '/' + encodeURIComponent(u.name || '')) },
+          avatarEl(u.name, u.photo || ''),
+          h('div', { class: 'info' }, h('div', { class: 'name' }, u.name || '')));
+      });
+    results.replaceChildren(...(rows.length ? rows : [h('div', { class: 'empty' }, 'لا توجد نتائج')]));
+  }
+  async function run() {
+    const t = input.value.trim().toLowerCase();
+    const my = ++seq;
+    if (t.length < 2) { results.replaceChildren(hint()); return; }
+    try {
+      const snap = await getDocs(query(users, where('nameLower', '>=', t), where('nameLower', '<', t + '\uf8ff'), limit(30)));
+      if (my === seq) paint(snap.docs);
+    } catch (e) {
+      results.replaceChildren(h('div', { class: 'empty' }, 'تعذّر البحث: ' + e.message));
+    }
+  }
+  input.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(run, 250); });
+  return h('div', { class: 'screen' },
+    h('header', { class: 'top' }, iconBtn('back', 'رجوع', () => history.back()), input),
+    results);
+}
+
+/* ---------- الإعدادات ---------- */
+function toggleRow(icon, label, sub, checked, onchange) {
+  const cb = h('input', { type: 'checkbox' });
+  cb.checked = checked;
+  cb.addEventListener('change', () => onchange(cb.checked));
+  return h('label', { class: 'srow' },
+    h('div', { class: 'sico' }, ico(icon, 20)),
+    h('div', { class: 'st' }, h('div', { class: 'sl' }, label), sub ? h('div', { class: 'ss' }, sub) : null),
+    h('div', { class: 'sw' }, cb, h('span', {})));
+}
+function linkRow(icon, label, sub, onclick, opts = {}) {
+  return h('div', { class: 'srow' + (opts.danger ? ' danger' : ''), onclick },
+    h('div', { class: 'sico' + (opts.danger ? ' red' : '') }, ico(icon, 20)),
+    h('div', { class: 'st' }, h('div', { class: 'sl' }, label), sub ? h('div', { class: 'ss' }, sub) : null),
+    opts.noChevron ? null : h('span', { class: 'chev' }, ico('chevron', 18)));
+}
+function switchAccountSheet() {
+  const accounts = loadAccounts();
+  const list = h('div', { style: 'display:flex;flex-direction:column;gap:8px' });
+  function paint() {
+    const acc = loadAccounts();
+    list.replaceChildren(...acc.map(a => {
+      const isMe = me && a.uid === me.uid;
+      const row = h('div', { class: 'row', style: 'border-radius:14px;padding:8px 10px' },
+        avatarEl(a.name, a.photo || ''),
+        h('div', { class: 'info' }, h('div', { class: 'name' }, a.name || 'حساب'), h('div', { class: 'sub' }, isMe ? 'الحساب الحالي' : 'اضغط للتبديل')),
+        isMe ? null : h('button', { class: 'ib', title: 'إزالة من القائمة', onclick: ev => { ev.stopPropagation(); forgetAccount(a.uid); paint(); } }, ico('x', 18)));
+      if (!isMe) row.addEventListener('click', () => { authState.register = false; authState.email = a.email || ''; m.close(); signOutClean(); });
+      return row;
+    }));
+  }
+  const m = modal(
+    h('h3', {}, 'تبديل الحساب'),
+    h('p', {}, 'اختر حساباً محفوظاً على هذا الجهاز وأدخل كلمة مروره. لا نحفظ كلمات المرور.'),
+    list,
+    h('button', { class: 'btn', onclick: () => { authState.register = false; authState.email = ''; m.close(); signOutClean(); } }, ico('plus', 20), 'إضافة حساب آخر'),
+    h('button', { class: 'btn', onclick: () => m.close() }, 'إغلاق'));
+  paint();
+  void accounts;
+}
+function deleteAccountFlow() {
+  const pw = h('input', { type: 'password', placeholder: 'كلمة المرور لتأكيد الحذف' });
+  const er = h('div', { class: 'err' });
+  const ok = h('button', { class: 'btn dfill' }, 'حذف حسابي نهائياً');
+  const m = modal(
+    h('h3', {}, 'حذف الحساب'),
+    h('p', {}, 'سيُحذف حسابك ويُزال اسمك وصورتك من نتائج البحث ولا يمكن التراجع عن ذلك.'),
+    pw, er, ok,
+    h('button', { class: 'btn', onclick: () => m.close() }, 'إلغاء'));
+  ok.addEventListener('click', async () => {
+    if (!pw.value) { er.textContent = 'أدخل كلمة المرور'; return; }
+    ok.disabled = true;
+    er.textContent = '';
+    try { await removeAccount(pw.value); m.close(); toast('تم حذف الحساب'); }
+    catch (e) { er.textContent = e.code ? authMsg(e.code) : e.message; ok.disabled = false; }
+  });
+}
+function turnSetup() {
+  let cur = {};
+  try { cur = JSON.parse(getStored('mc_turn') || '{}') || {}; } catch (_) {}
+  const app = h('input', { type: 'text', placeholder: 'اسم التطبيق في Metered (مثل myapp)', dir: 'ltr', value: cur.app || TURN_APP || '' });
+  const key = h('input', { type: 'text', placeholder: 'مفتاح API', dir: 'ltr', value: cur.key || TURN_KEY || '' });
+  const msg = h('div', { class: 'err' });
+  const save = h('button', { class: 'btn main' }, 'حفظ واختبار');
+  const m = modal(h('h3', {}, 'إعداد المكالمات'),
+    h('p', {}, 'لتنجح المكالمات بين شبكات مختلفة (خاصة الجوال) يلزم خادم تمرير TURN. سجّل مجاناً في dashboard.metered.ca وأنشئ تطبيقاً، ثم انسخ اسمه ومفتاح API إلى هنا. أدخل البيانات نفسها في هاتف الطرف الآخر.'),
+    app, key, msg, save, h('button', { class: 'btn', onclick: () => m.close() }, 'إغلاق'));
+  save.addEventListener('click', async () => {
+    const a = app.value.trim().replace(/^https?:\/\//i, '').replace(/\.metered\.live.*$/i, ''), k = key.value.trim();
+    iceCache = null;
+    if (!a || !k) { setStored('mc_turn', ''); msg.className = 'err'; msg.textContent = 'تم المسح (يُستخدم STUN فقط)'; return; }
+    setStored('mc_turn', JSON.stringify({ app: a, key: k }));
+    msg.className = 'err';
+    msg.textContent = 'جارٍ الاختبار…';
+    const r = await getIceServers(true);
+    if (r.turn) { msg.className = 'err ok'; msg.textContent = 'تم الاتصال بخادم TURN بنجاح'; }
+    else { msg.className = 'err'; msg.textContent = 'تعذّر الاتصال. تحقق من الاسم والمفتاح.'; }
+  });
+}
+function showEncInfo() {
+  const m = modal(h('h3', {}, 'التشفير من طرف إلى طرف'),
+    h('p', {}, myKeys ? 'مفعّل على هذا الجهاز.' : 'غير متاح على هذا الجهاز حالياً (يتطلب متصفحاً حديثاً وموقعاً بـ HTTPS).'),
+    h('p', {}, 'الرسائل والصور والملفات تُشفَّر على جهازك بمفتاح يتشاركه أنت والطرف الآخر فقط، ولا يستطيع الخادم قراءتها.'),
+    h('p', {}, 'مفتاحك الخاص محفوظ على هذا الجهاز، ونسخة احتياطية منه مشفّرة بكلمة مرورك لتستعيده عند الدخول من جهاز جديد.'),
+    h('p', {}, 'تنبيه: إذا أعدت تعيين كلمة المرور عبر البريد فلن تتمكن من قراءة رسائلك القديمة. ولمطابقة هويتك مع الطرف الآخر استخدم «رمز الأمان» من قائمة المحادثة.'),
+    h('button', { class: 'btn', onclick: () => m.close() }, 'إغلاق'));
+}
+function settingsView() {
+  const sysNotif = () => {
+    if (window.NativeBridge) return 'مفعّلة عبر التطبيق';
+    if (typeof Notification === 'undefined') return 'غير مدعومة في هذا التطبيق (ستصلك تنبيهات داخل التطبيق)';
+    return Notification.permission === 'granted' ? 'مفعّلة' : Notification.permission === 'denied' ? 'محظورة من إعدادات الجهاز' : 'اضغط للتفعيل';
+  };
+  const sysRow = linkRow('bell', 'إشعارات النظام', sysNotif(), () => {
+    if (window.NativeBridge || typeof Notification === 'undefined' || Notification.permission !== 'default') { toast(sysNotif(), 4000); return; }
+    Notification.requestPermission().then(() => { sysRow.querySelector('.ss').textContent = sysNotif(); });
+  }, { noChevron: true });
+
+  return h('div', { class: 'screen' },
+    h('header', { class: 'top' }, iconBtn('back', 'رجوع', () => history.back()), h('div', { class: 'htitle' }, 'الإعدادات')),
+    h('div', { class: 'page' },
+      h('div', { class: 'sgroup' },
+        h('div', { class: 'pcardtop', onclick: () => { location.hash = 'profile'; } },
+          avatarEl(profile.name, profile.photo, 'avatar'),
+          h('div', { class: 'st', style: 'flex:1' }, h('div', { class: 'pn' }, profile.name || 'حسابي'), h('div', { class: 'pm' }, 'تعديل الاسم والصورة')),
+          h('span', { class: 'chev' }, ico('chevron', 18)))),
+      h('div', { class: 'stitle' }, 'التفضيلات'),
+      h('div', { class: 'sgroup' },
+        toggleRow('moon', 'الوضع الداكن', 'مظهر مريح للعين ليلاً', currentTheme() === 'dark', on => { setStored('mc_theme', on ? 'dark' : 'light'); applyTheme(); }),
+        toggleRow('bell', 'إشعارات الرسائل', 'تنبيه عند وصول رسالة جديدة', notifOn(), on => setStored('mc_notif', on ? '1' : '0')),
+        sysRow,
+        toggleRow('volume', 'الأصوات', 'صوت الإرسال والاستقبال والرنين', soundOn(), on => { setStored('mc_sound', on ? '1' : '0'); if (on) soundSend(); })),
+      h('div', { class: 'stitle' }, 'الخصوصية والأمان'),
+      h('div', { class: 'sgroup' },
+        linkRow('lock', 'التشفير من طرف إلى طرف', myKeys ? 'مفعّل على هذا الجهاز' : 'غير متاح', showEncInfo),
+        linkRow('ban', 'المحظورون', 'إدارة من قمت بحظرهم', () => { location.hash = 'blocked'; }),
+        linkRow('phone', 'إعداد المكالمات', 'خادم TURN لنجاح الاتصال بين الشبكات', turnSetup),
+        linkRow('activity', 'فحص المكالمات', 'يكشف سبب عدم عمل الاتصال', runDiagnostics)),
+      h('div', { class: 'stitle' }, 'الحساب'),
+      h('div', { class: 'sgroup' },
+        linkRow('repeat', 'تبديل الحساب', 'الدخول بحساب آخر', switchAccountSheet),
+        linkRow('logout', 'تسجيل الخروج', null, logout, { noChevron: true }),
+        linkRow('trash', 'حذف الحساب', 'حذف نهائي لا يمكن التراجع عنه', deleteAccountFlow, { danger: true }))));
+}
+function blockedView() {
+  const list = h('div', { class: 'list' });
+  async function paint() {
+    const ids = [...blockedSet];
+    if (!ids.length) { list.replaceChildren(h('div', { class: 'empty' }, ico('ban', 48, 1.5), h('div', {}, 'لا يوجد مستخدمون محظورون'))); return; }
+    list.replaceChildren(h('div', { class: 'empty' }, 'جارٍ التحميل…'));
+    const rows = await Promise.all(ids.map(async uid => {
+      let u = {};
+      try { const s = await getDoc(doc(db, 'users', uid)); if (s.exists()) u = s.data(); } catch (_) {}
+      const nm = u.deleted ? 'حساب محذوف' : (u.name || 'مستخدم');
+      return h('div', { class: 'row' },
+        avatarEl(nm, u.photo || ''),
+        h('div', { class: 'info' }, h('div', { class: 'name' }, nm)),
+        h('button', { class: 'btn small', onclick: () => setBlocked(uid, false) }, 'إلغاء الحظر'));
+    }));
+    list.replaceChildren(...rows);
+  }
+  chatsSubs.add(paint);
+  cleanup.push(() => chatsSubs.delete(paint));
+  paint();
+  return h('div', { class: 'screen' },
+    h('header', { class: 'top' }, iconBtn('back', 'رجوع', () => history.back()), h('div', { class: 'htitle' }, 'المحظورون')),
+    list);
+}
+
+/* ---------- الملف الشخصي ---------- */
+function profileView() {
+  let pending;
+  const av = avatarEl(profile.name, profile.photo, 'bigav');
+  const nameIn = h('input', { type: 'text', value: profile.name, placeholder: 'اسم المستخدم', maxlength: '30' });
+  const msg = h('div', { class: 'err' });
+  const photoInp = h('input', { type: 'file', accept: 'image/*' });
+  photoInp.addEventListener('change', async () => {
+    const f = photoInp.files[0];
+    photoInp.value = '';
+    if (!f) return;
+    try { const b = await compressSquare(f, 192); pending = b; fillAvatar(av, nameIn.value || profile.name, b); }
+    catch (_) { toast('تعذّر قراءة الصورة'); }
+  });
+  const saveBtn = h('button', { class: 'btn main' }, 'حفظ التغييرات');
+  saveBtn.addEventListener('click', async () => {
+    const n = nameIn.value.trim();
+    msg.className = 'err';
+    if (n.length < 3) { msg.textContent = 'اسم المستخدم 3 أحرف على الأقل'; return; }
+    saveBtn.disabled = true;
+    msg.textContent = '';
+    try {
+      await saveProfile(n, pending);
+      pending = undefined;
+      msg.className = 'err ok';
+      msg.textContent = 'تم الحفظ';
+    } catch (e) { msg.textContent = 'تعذّر الحفظ: ' + e.message; }
+    saveBtn.disabled = false;
+  });
+  return h('div', { class: 'screen' },
+    h('header', { class: 'top' }, iconBtn('back', 'رجوع', () => history.back()), h('div', { class: 'htitle' }, 'ملفي الشخصي')),
+    h('div', { class: 'profile' },
+      av,
+      h('div', { class: 'pcard' },
+        h('label', { class: 'btn pick' }, ico('camera', 20), 'تغيير الصورة', photoInp),
+        h('button', { class: 'btn', onclick: () => { pending = ''; fillAvatar(av, nameIn.value || profile.name, ''); } }, ico('trash', 20), 'حذف الصورة'),
+        nameIn, msg, saveBtn)));
+}
+
+/* ---------- المحادثة (بأسلوب ماسنجر) ---------- */
+const REACTS = ['👍', '❤️', '😂', '😮', '😢', '😡'];
+const EMOJI_SETS = [
+  { i: '😀', list: '😀 😃 😄 😁 😆 😅 😂 🤣 😊 😇 🙂 🙃 😉 😌 😍 🥰 😘 😗 😙 😚 😋 😛 😝 😜 🤪 🤨 🧐 🤓 😎 🥳 😏 😒 😞 😔 😟 😕 🙁 😣 😖 😫 😩 🥺 😢 😭 😤 😠 😡 🤬 🤯 😳 🥵 🥶 😱 😨 😰 😥 😓 🤗 🤔 🤭 🤫 😶 😐 😑 😬 🙄 😯 😦 😧 😮 😲 🥱 😴 🤤 😪 😵 🤐 🥴 🤢 🤮 🤧 😷 🤒 🤕 🤑 🤠 😈 👿 👹 🤡 💩 👻 💀 👽 🤖 🎃'.split(' ') },
+  { i: '👍', list: '👍 👎 👌 ✌️ 🤞 🤟 🤘 🤙 👈 👉 👆 👇 ☝️ ✋ 🤚 🖐 🖖 👋 🤝 🙏 ✍️ 💪 👏 🙌 👐 🤲 🫶 🤌 🤏 👀 👅 👄 🧠 🦾'.split(' ') },
+  { i: '❤️', list: '❤️ 🧡 💛 💚 💙 💜 🖤 🤍 🤎 💔 ❣️ 💕 💞 💓 💗 💖 💘 💝 💯 ✅ ❌ ⭐ 🌟 ✨ ⚡ 🔥 💥 💫 🎉 🎊 🎁 🎈 🏆 🥇 🔔 💬 💭 🕌 ☪️ 🤲'.split(' ') },
+  { i: '🐱', list: '🐶 🐱 🐭 🐹 🐰 🦊 🐻 🐼 🐨 🐯 🦁 🐮 🐷 🐸 🐵 🐔 🐧 🐦 🦅 🦋 🐝 🐞 🐢 🐍 🐠 🐬 🐳 🐪 🐑 🐐 🐎 🌹 🌸 🌼 🌻 🌴 🌵 🍀 🌙 ☀️ ⛅ 🌧 ❄️ 🌈 🌊'.split(' ') },
+  { i: '🍔', list: '🍎 🍌 🍉 🍇 🍓 🍒 🍑 🍍 🥭 🥑 🍅 🥕 🌽 🍞 🧀 🍗 🍔 🍟 🍕 🌭 🥪 🌮 🍝 🍣 🍦 🍩 🍪 🎂 🍫 🍿 ☕ 🍵 🥤 🍺 🍯 🥛 🍚 🍲'.split(' ') },
+  { i: '⚽', list: '⚽ 🏀 🏈 🎾 🏐 🎮 🎯 🎲 🎵 🎶 🎤 🎧 📱 💻 📷 🎬 📚 ✏️ 💡 🔑 🚗 ✈️ 🚀 🏠 ⏰ 💰 💎 🌍 🕋 📍 🔒 🎓 🛒'.split(' ') }
+];
+function openEmojiPicker(onPick) {
+  const grid = h('div', { class: 'egrid' });
+  const tabs = h('div', { class: 'etabs' });
+  const back = h('div', { class: 'sheet-back', onclick: ev => { if (ev.target === back) back.remove(); } },
+    h('div', { class: 'sheet epick' }, tabs, grid));
+  const tabEls = EMOJI_SETS.map((set, idx) => h('button', { class: 'etab', onclick: () => showTab(idx) }, set.i));
+  tabs.replaceChildren(...tabEls);
+  function showTab(idx) {
+    tabEls.forEach((t, i) => { t.className = 'etab' + (i === idx ? ' on' : ''); });
+    grid.replaceChildren(...EMOJI_SETS[idx].list.map(e => h('button', { class: 'ebtn', onclick: () => { back.remove(); onPick(e); } }, e)));
+    grid.scrollTop = 0;
+  }
+  document.body.append(back);
+  showTab(0);
+}
+
+
+function chatView(otherUid, otherName) {
+  openChatUid = otherUid;
+  const chatRef = doc(db, 'chats', chatIdFor(me.uid, otherUid));
+  const hdrAv = avatarEl(otherName, '');
+  const title = h('div', { class: 'htitle' }, otherName);
+  const sub = h('div', { class: 'hsub' }, '');
+  const more = h('button', { class: 'more', style: 'display:none', onclick: loadMore }, 'عرض رسائل أقدم');
+  const encNote = h('div', { class: 'encnote' }, ico('lock', 13), 'الرسائل والملفات مشفّرة من طرف إلى طرف');
+  const empty = h('div', { class: 'empty-chat' }, emptyChatSVG(), h('div', {}, 'لا توجد رسائل بعد'), h('small', {}, 'قل مرحباً 👋'));
+  const box = h('div', { class: 'msgs' });
+  const input = h('textarea', { rows: '1', placeholder: 'اكتب رسالة…' });
+  const sendBtn = h('button', { class: 'sendbtn like', title: 'إرسال' }, ico('like', 26));
+
+  let curPhoto = '';
+  let lim = 40, dead = false, unsub = null, marking = false, first = true, snapFirst = true, snapSeq = 0;
+  let cleared = 0, docsCache = [], loaded = false, hasMore = false, restoreH = 0, lastId = null, retried = false;
+  let hasText = false, blockedNow = isBlocked(otherUid), encOn = false;
+  let lastPing = 0, typingUntil = 0, lastTp = null, chatSnapSeen = false, typTimer = null;
+  const nodes = new Map();
+  let sheet = null;
+  cleanup.push(() => { dead = true; clearTimeout(typTimer); if (openChatUid === otherUid) openChatUid = null; if (unsub) unsub(); if (sheet) sheet.remove(); });
+
+  function updateSub() {
+    const typing = typingUntil > Date.now();
+    sub.className = 'hsub' + (typing ? ' typ' : '');
+    sub.replaceChildren(...(typing ? ['يكتب…'] : [ico('lock', 12), encOn ? 'مشفّرة من طرف إلى طرف' : 'غير مشفّرة']));
+  }
+  function showTyping() {
+    typingUntil = Date.now() + 4000;
+    updateSub();
+    clearTimeout(typTimer);
+    typTimer = setTimeout(updateSub, 4100);
+  }
+  function pingTyping() {
+    const n = Date.now();
+    if (n - lastPing < 2500 || blockedNow) return;
+    lastPing = n;
+    updateDoc(chatRef, { ['tp.' + me.uid]: increment(1) }).catch(() => {});
+  }
+  updateSub();
+
+  box.dataset.stick = '1';
+  box.addEventListener('scroll', () => {
+    box.dataset.stick = (box.scrollHeight - box.scrollTop - box.clientHeight < 140) ? '1' : '0';
+  });
+
+  const ensureP = setDoc(chatRef, { participants: [me.uid, otherUid], unread: { [me.uid]: 0 } }, { merge: true }).catch(() => {});
+  (async () => {
+    try {
+      const [mS, oS] = await Promise.all([getDoc(doc(db, 'users', me.uid)), getDoc(doc(db, 'users', otherUid))]);
+      const md = mS.exists() ? mS.data() : {}, od = oS.exists() ? oS.data() : {};
+      const oName = od.deleted ? 'حساب محذوف' : (od.name || otherName);
+      const oPhoto = od.deleted ? '' : (od.photo || '');
+      const mName = md.name || profile.name || '';
+      const mPhoto = md.photo || profile.photo || '';
+      if (dead) return;
+      title.textContent = oName;
+      fillAvatar(hdrAv, oName, oPhoto);
+      curPhoto = oPhoto;
+      if (od.pub) pubCache.set(otherUid, od.pub);
+      try { encOn = !!(await chatKey(otherUid)); } catch (_) { encOn = false; }
+      updateSub();
+      render();
+      await ensureP;
+      await setDoc(chatRef, {
+        names: { [me.uid]: mName, [otherUid]: oName },
+        photos: { [me.uid]: mPhoto, [otherUid]: oPhoto }
+      }, { merge: true });
+    } catch (_) {}
+  })();
+
+  /* ---- إرسال (مشفّر) ---- */
+  async function sendMsg(payload, preview) {
+    soundSend();
+    let sealed;
+    try { sealed = await sealMessage(otherUid, payload, preview); }
+    catch (_) { toast('تعذّر تشفير الرسالة'); return; }
+    const b = writeBatch(db);
+    b.set(doc(collection(chatRef, 'messages')), { senderId: me.uid, ...sealed.msg, time: serverTimestamp(), read: false });
+    b.set(chatRef, { ...sealed.last, lastTime: serverTimestamp(), lastSender: me.uid, unread: { [otherUid]: increment(1) } }, { merge: true });
+    b.commit().catch(e => toast('فشل الإرسال: ' + e.message, 4000));
+  }
+  const send = (text, image) => sendMsg({ text: text || '', ...(image ? { image } : {}) }, image ? 'صورة' : text);
+  function sendText() {
+    const t = input.value.trim();
+    if (!t) { send('👍'); return; }
+    input.value = '';
+    input.style.height = 'auto';
+    syncSend();
+    send(t);
+  }
+  function syncSend() {
+    const ht = input.value.trim().length > 0;
+    if (ht === hasText) return;
+    hasText = ht;
+    sendBtn.replaceChildren(ico(ht ? 'send' : 'like', ht ? 22 : 26));
+    sendBtn.className = 'sendbtn' + (ht ? '' : ' like');
+    if (ht) composer.classList.add('typing'); else composer.classList.remove('typing');
+  }
+  async function sendBig(f) {
+    const id = doc(collection(chatRef, 'messages')).id;
+    const total = Math.max(1, Math.ceil(f.size / CHUNK));
+    const key = await chatKey(otherUid);
+    for (let i = 0; i < total; i++) {
+      toast('جارٍ رفع «' + f.name + '» ' + Math.round(i / total * 100) + '%', 0);
+      const part = f.slice(i * CHUNK, (i + 1) * CHUNK);
+      const data = key ? await aesEncBytes(key, new Uint8Array(await part.arrayBuffer())) : await blobToB64(part);
+      await setDoc(doc(chatRef, 'messages', id + '_' + i), { senderId: me.uid, chunk: i, data });
+    }
+    hideToast();
+    const type = f.type || 'application/octet-stream';
+    const sealed = await sealMessage(otherUid, { text: '', file: { name: f.name, type, size: f.size, chunks: total, enc: !!key } },
+      (type.startsWith('video/') ? 'فيديو: ' : 'ملف: ') + f.name);
+    soundSend();
+    const b = writeBatch(db);
+    b.set(doc(chatRef, 'messages', id), { senderId: me.uid, ...sealed.msg, time: serverTimestamp(), read: false });
+    b.set(chatRef, { ...sealed.last, lastTime: serverTimestamp(), lastSender: me.uid, unread: { [otherUid]: increment(1) } }, { merge: true });
+    await b.commit();
+  }
+  async function sendFiles(list) {
+    closeSheet();
+    for (const f of list) {
+      try {
+        if (f.size > MAX_FILE_MB * 1048576) { toast('«' + f.name + '» أكبر من ' + MAX_FILE_MB + ' ميغابايت', 4500); continue; }
+        if (f.type.startsWith('image/') && f.type !== 'image/gif') {
+          toast('جارٍ تجهيز الصورة…', 0);
+          const b64 = await compressImage(f);
+          hideToast();
+          send('', b64);
+        } else {
+          await sendBig(f);
+        }
+      } catch (e) { toast('تعذّر إرسال الملف: ' + (e.message || ''), 4500); }
+    }
+  }
+  function fileInput(attrs) {
+    const inp = h('input', { type: 'file', ...attrs });
+    inp.addEventListener('change', () => {
+      const files = [...inp.files];
+      inp.value = '';
+      if (files.length) sendFiles(files); else closeSheet();
+    });
+    return inp;
+  }
+  function closeSheet() { if (sheet) { sheet.remove(); sheet = null; } }
+  function openSheet() {
+    closeSheet();
+    const mk = (icon, label, attrs) => h('label', { class: 'opt' }, h('span', { class: 'oi' }, ico(icon, 30)), label, fileInput(attrs));
+    sheet = h('div', { class: 'sheet-back', onclick: ev => { if (ev.target === sheet) closeSheet(); } },
+      h('div', { class: 'sheet grid' },
+        mk('image', 'صور وفيديو', { accept: 'image/*,video/*', multiple: '' }),
+        mk('file', 'ملف', { multiple: '' }),
+        mk('camera', 'كاميرا', { accept: 'image/*', capture: 'environment' })));
+    document.body.append(sheet);
+  }
+
+  /* ---- إجراءات الرسائل: تفاعل، نسخ، حذف ---- */
+  async function react(m, emoji) {
+    if (m.deleted) return;
+    const mineR = m.reactions && m.reactions[me.uid];
+    try { await updateDoc(doc(chatRef, 'messages', m.id), { ['reactions.' + me.uid]: mineR === emoji ? deleteField() : emoji }); }
+    catch (e) { toast('تعذّر التفاعل: ' + (e.code || e.message), 4000); }
+  }
+  async function delMsg(m) {
+    if (!confirm('حذف هذه الرسالة عند الجميع؟')) return;
+    try {
+      await updateDoc(doc(chatRef, 'messages', m.id), { deleted: true, text: '', image: deleteField(), file: deleteField(), ct: deleteField(), iv: deleteField(), v: deleteField() });
+      if (m.file) for (let i = 0; i < m.file.chunks; i++) updateDoc(doc(chatRef, 'messages', m.id + '_' + i), { data: '' }).catch(() => {});
+      const last = docsCache[docsCache.length - 1];
+      if (last && last.id === m.id) await setDoc(chatRef, { lastMessage: 'رسالة محذوفة', lm: deleteField() }, { merge: true });
+    } catch (e) { toast('تعذّر الحذف: ' + e.message, 4000); }
+  }
+  async function editMsg(m) {
+    if (m.deleted || !m.text || m.image || m.file || m.senderId !== me.uid) return;
+    const ta = h('textarea', { dir: 'auto', maxlength: '4000' });
+    ta.value = m.text;
+    const msg = h('div', { class: 'err' });
+    const save = h('button', { class: 'btn main' }, 'حفظ التعديل');
+    const md = modal(h('h3', {}, 'تعديل الرسالة'), ta, msg, save, h('button', { class: 'btn', onclick: () => md.close() }, 'إلغاء'));
+    setTimeout(() => { try { ta.focus(); } catch (_) {} }, 60);
+    save.addEventListener('click', async () => {
+      const t = ta.value.trim();
+      if (!t) { msg.textContent = 'لا يمكن أن تكون الرسالة فارغة'; return; }
+      if (t === m.text) { md.close(); return; }
+      save.disabled = true;
+      msg.textContent = '';
+      try {
+        const sealed = await sealMessage(otherUid, { text: t, edited: true }, t);
+        const patch = sealed.enc ? { ...sealed.msg } : { ...sealed.msg, edited: true };
+        await updateDoc(doc(chatRef, 'messages', m.id), patch);
+        const last = docsCache[docsCache.length - 1];
+        if (last && last.id === m.id) await setDoc(chatRef, sealed.last, { merge: true });
+        md.close();
+      } catch (e) {
+        save.disabled = false;
+        msg.textContent = 'تعذّر التعديل: ' + (e.code || e.message);
+      }
+    });
+  }
+  function copyText(t) {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(() => toast('تم النسخ'), () => toast('تعذّر النسخ'));
+      else toast('النسخ غير مدعوم هنا');
+    } catch (_) { toast('تعذّر النسخ'); }
+  }
+  function messageMenu(m) {
+    if (m.deleted) return;
+    const mineR = m.reactions && m.reactions[me.uid];
+    const row = h('div', { class: 'reactrow' }, REACTS.map(e => h('button', { class: 'rbtn' + (mineR === e ? ' on' : ''), onclick: () => { back.remove(); react(m, e); } }, e)),
+      h('button', { class: 'rbtn plus', title: 'المزيد', onclick: () => { back.remove(); openEmojiPicker(e => react(m, e)); } }, ico('plus', 22)));
+    const items = [];
+    if (m.text) items.push({ icon: 'copy', label: 'نسخ', fn: () => copyText(m.text) });
+    if (m.senderId === me.uid && m.text && !m.image && !m.file) items.push({ icon: 'edit', label: 'تعديل', fn: () => editMsg(m) });
+    if (m.senderId === me.uid) items.push({ icon: 'trash', label: 'حذف عند الجميع', danger: true, fn: () => delMsg(m) });
+    const back = actionSheet(items, row);
+  }
+  function showReactors(m) {
+    const entries = Object.entries(m.reactions || {});
+    const rows = entries.map(([uid, e]) => {
+      const mineR = uid === me.uid;
+      const row = h('div', { class: 'row', style: 'border-radius:12px;padding:8px' },
+        avatarEl(mineR ? profile.name : title.textContent, mineR ? profile.photo : curPhoto),
+        h('div', { class: 'info' }, h('div', { class: 'name' }, mineR ? 'أنت' : title.textContent), mineR ? h('div', { class: 'sub' }, 'اضغط لإزالة تفاعلك') : null),
+        h('div', { style: 'font-size:26px' }, e));
+      if (mineR) row.addEventListener('click', () => { md.close(); react(m, e); });
+      return row;
+    });
+    const md = modal(h('h3', {}, 'التفاعلات'), ...rows, h('button', { class: 'btn', onclick: () => md.close() }, 'إغلاق'));
+  }
+  function insertEmoji(e) {
+    const st = typeof input.selectionStart === 'number' ? input.selectionStart : input.value.length;
+    const en = typeof input.selectionEnd === 'number' ? input.selectionEnd : st;
+    input.value = input.value.slice(0, st) + e + input.value.slice(en);
+    const pos = st + e.length;
+    try { input.setSelectionRange(pos, pos); } catch (_) {}
+    input.dispatchEvent(new Event('input'));
+    input.focus();
+  }
+  async function showSecurity() {
+    const code = await securityCode(otherUid);
+    const m = modal(
+      h('h3', {}, 'رمز الأمان'),
+      code ? h('div', { style: 'font-size:22px;font-weight:800;letter-spacing:2px;text-align:center;direction:ltr;line-height:1.8' }, code)
+           : h('p', {}, 'لا يمكن عرض الرمز لأن التشفير غير مفعّل لدى أحد الطرفين.'),
+      h('p', {}, 'قارن هذا الرمز مع الشخص الآخر (من هاتفه أو عبر مكالمة). إن تطابق فمحادثتكما مشفّرة بينكما فقط ولا يستطيع أحد التجسس عليها. وإن اختلف فقد تكون هناك مشكلة، ولا تثق بالمحادثة.'),
+      h('button', { class: 'btn', onclick: () => m.close() }, 'إغلاق'));
+  }
+  function chatMenu() {
+    actionSheet([
+      { icon: 'lock', label: 'رمز الأمان', fn: showSecurity },
+      { icon: 'ban', label: blockedNow ? 'إلغاء حظر المستخدم' : 'حظر المستخدم', danger: !blockedNow, fn: () => setBlocked(otherUid, !blockedNow) },
+      { icon: 'trash', label: 'حذف المحادثة', danger: true, fn: async () => { if (confirm('حذف هذه المحادثة من عندك؟ (لن تُحذف عند الطرف الآخر)')) { await clearChat(otherUid); history.back(); } } }
+    ]);
+  }
+
+  async function markRead() {
+    if (marking || blockedNow) return;
+    marking = true;
+    try {
+      const qs = await getDocs(query(collection(chatRef, 'messages'),
+        where('senderId', '==', otherUid), where('read', '==', false)));
+      const b = writeBatch(db);
+      qs.docs.forEach(d => b.update(d.ref, { read: true }));
+      b.set(chatRef, { unread: { [me.uid]: 0 } }, { merge: true });
+      await b.commit();
+    } catch (_) {} finally { marking = false; }
+  }
+
+  /* ---- رسم الرسائل (تحديث تدريجي) ---- */
+  function ticks(m) {
+    if (m.pending) return ico('clock', 13, 2.4);
+    if (m.read) return h('span', { class: 'tk2' }, ico('check', 13, 2.8), ico('check', 13, 2.8));
+    return ico('check', 13, 2.4);
+  }
+  function bubble(m) {
+    const mine = m.senderId === me.uid;
+    const t = m.time && m.time.toDate ? m.time.toDate() : new Date();
+    if (m.deleted) {
+      return h('div', { class: 'bubble deleted ' + (mine ? 'mine' : 'other') },
+        h('div', {}, 'تم حذف هذه الرسالة'),
+        h('div', { class: 't' }, h('span', {}, hhmm(t))));
+    }
+    if (m.undecryptable) {
+      return h('div', { class: 'bubble deleted ' + (mine ? 'mine' : 'other') },
+        h('div', {}, 'رسالة مشفّرة لا يمكن عرضها على هذا الجهاز'),
+        h('div', { class: 't' }, h('span', {}, hhmm(t))));
+    }
+    let tapT = null;
+    const onTap = (single) => {
+      if (tapT) { clearTimeout(tapT); tapT = null; react(m, '👍'); return; }
+      tapT = setTimeout(() => { tapT = null; if (single) single(); }, 300);
+    };
+    let img = null;
+    if (m.image) {
+      img = h('img', { class: 'mimg', src: 'data:image/jpeg;base64,' + m.image });
+      img.addEventListener('load', () => { if (box.dataset.stick === '1') box.scrollTop = box.scrollHeight; });
+      img.addEventListener('click', ev => {
+        ev.stopPropagation();
+        onTap(() => openViewer({ name: 'صورة.jpg', type: 'image/jpeg', getBlob: async () => new Blob([b64ToBytes(m.image)], { type: 'image/jpeg' }) }));
+      });
+    }
+    let fl = null;
+    if (m.file) {
+      const f = m.file;
+      fl = h('div', { class: 'fcard' },
+        h('div', { class: 'ficon' }, ico(fileIconName(f.type), 22)),
+        h('div', { class: 'finfo' },
+          h('div', { class: 'fname' }, f.name),
+          h('div', { class: 'fsize' }, fmtSize(f.size) + ' · اضغط للفتح')));
+      fl.addEventListener('click', ev => {
+        ev.stopPropagation();
+        onTap(() => openViewer({
+          name: f.name, type: f.type,
+          getBlob: async (cb) => fetchFileBlob(chatRef, m.id, f, cb, f.enc ? await chatKey(otherUid) : null)
+        }));
+      });
+    }
+    const big = m.text === '👍' && !m.image && !m.file;
+    const rx = m.reactions ? Object.values(m.reactions) : [];
+    const rxEl = rx.length ? h('div', { class: 'rx', onclick: ev => { ev.stopPropagation(); showReactors(m); } }, [...new Set(rx)].join('') + (rx.length > 1 ? ' ' + rx.length : '')) : null;
+    const el = h('div', { class: 'bubble ' + (mine ? 'mine' : 'other') + (big ? ' big' : '') },
+      img, fl,
+      m.text ? h('div', {}, linkify(m.text)) : null,
+      h('div', { class: 't' }, m.edited ? h('span', { class: 'ed' }, 'معدّلة') : null, h('span', {}, hhmm(t)), mine ? ticks(m) : null),
+      rxEl);
+    el.addEventListener('click', () => onTap(null));
+    onLongPress(el, () => messageMenu(m));
+    return el;
+  }
+  function render() {
+    if (!loaded) return;
+    const vis = docsCache.filter(m => ms(m.time) > cleared && !(blockedNow && m.senderId === otherUid));
+    const stick = box.dataset.stick === '1';
+    const els = [more];
+    more.style.display = hasMore ? '' : 'none';
+    if (encOn) els.push(encNote);
+    if (!vis.length) els.push(empty);
+    const keep = new Set();
+    for (const m of vis) {
+      const sig = [m.edited ? 1 : 0, m.deleted ? 1 : 0, m.undecryptable ? 1 : 0, m.read ? 1 : 0, m.pending ? 1 : 0, m.text || '', m.image ? 1 : 0, m.file ? m.file.name : '', ms(m.time), m.reactions ? JSON.stringify(m.reactions) : ''].join('|');
+      let n = nodes.get(m.id);
+      if (!n || n.sig !== sig) { n = { el: bubble(m), sig }; nodes.set(m.id, n); }
+      keep.add(m.id);
+      els.push(n.el);
+    }
+    for (const id of [...nodes.keys()]) if (!keep.has(id)) nodes.delete(id);
+    let cursor = box.firstChild;
+    for (const el of els) {
+      if (el === cursor) cursor = cursor.nextSibling;
+      else box.insertBefore(el, cursor);
+    }
+    while (cursor) { const nx = cursor.nextSibling; cursor.remove(); cursor = nx; }
+    const lastM = vis[vis.length - 1];
+    if (restoreH) { box.scrollTop = box.scrollHeight - restoreH; restoreH = 0; }
+    else if (first || stick || (lastM && lastM.senderId === me.uid)) { box.scrollTop = box.scrollHeight; box.dataset.stick = '1'; first = false; }
+  }
+  function subscribe() {
+    if (unsub) unsub();
+    const q = query(collection(chatRef, 'messages'), orderBy('time', 'desc'), limit(lim));
+    unsub = onSnapshot(q, { includeMetadataChanges: true }, async snap => {
+      const mySeq = ++snapSeq;
+      const raw = snap.docs.map(d => ({ id: d.id, pending: d.metadata.hasPendingWrites, ...d.data({ serverTimestamps: 'estimate' }) })).reverse();
+      const dec = await Promise.all(raw.map(m => openMessage(otherUid, m)));
+      if (dead || mySeq !== snapSeq) return;
+      docsCache = dec;
+      loaded = true;
+      hasMore = snap.docs.length >= lim;
+      render();
+      const last = docsCache[docsCache.length - 1];
+      if (snapFirst) { lastId = last ? last.id : null; snapFirst = false; }
+      else if (last && last.id !== lastId) {
+        lastId = last.id;
+        if (last.senderId !== me.uid && !snap.metadata.fromCache && !blockedNow) { typingUntil = 0; updateSub(); soundRecv(); }
+      }
+      if (docsCache.some(m => m.senderId === otherUid && m.read === false)) markRead();
+    }, async err => {
+      if (err && err.code === 'permission-denied' && !retried) {
+        retried = true;
+        await ensureP;
+        if (!dead) subscribe();
+      } else {
+        box.replaceChildren(h('div', { class: 'empty' }, 'خطأ: ' + (err && err.message)));
+      }
+    });
+  }
+  function loadMore() {
+    restoreH = box.scrollHeight;
+    lim += 40;
+    subscribe();
+  }
+  cleanup.push(onSnapshot(chatRef, snap => {
+    const d = snap.data({ serverTimestamps: 'estimate' }) || {};
+    const c = clearedOf(d);
+    if (c !== cleared) { cleared = c; render(); }
+    const n = d.tp && d.tp[otherUid];
+    if (chatSnapSeen && n !== undefined && n !== lastTp && !blockedNow) showTyping();
+    lastTp = n === undefined ? null : n;
+    chatSnapSeen = true;
+  }, () => {}));
+  subscribe();
+
+  input.addEventListener('input', () => { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 120) + 'px'; syncSend(); if (hasText) pingTyping(); });
+  input.addEventListener('keydown', ev => {
+    if (ev.key === 'Enter' && !ev.shiftKey && matchMedia('(pointer:fine)').matches) { ev.preventDefault(); sendText(); }
+  });
+  sendBtn.addEventListener('click', sendText);
+
+  const blockBar = h('div', { class: 'blockbar' },
+    h('div', {}, 'لقد حظرت هذا المستخدم. لن تصلك رسائله ولا مكالماته.'),
+    h('button', { class: 'btn', onclick: () => setBlocked(otherUid, false) }, 'إلغاء الحظر'));
+  const composer = h('div', { class: 'composer' },
+    h('button', { class: 'cb', title: 'إرفاق', onclick: openSheet }, ico('plus', 26)),
+    h('label', { class: 'cb extra', title: 'كاميرا' }, ico('camera', 24), fileInput({ accept: 'image/*', capture: 'environment' })),
+    h('label', { class: 'cb extra', title: 'صور وفيديو' }, ico('image', 24), fileInput({ accept: 'image/*,video/*', multiple: '' })),
+    h('div', { class: 'pill' }, input, h('button', { class: 'cb emo', title: 'رموز تعبيرية', onclick: () => openEmojiPicker(insertEmoji) }, ico('smile', 22))),
+    sendBtn);
+  function applyBlocked() {
+    blockBar.style.display = blockedNow ? 'flex' : 'none';
+    composer.style.display = blockedNow ? 'none' : 'flex';
+  }
+  const onB = () => { const nb = isBlocked(otherUid); if (nb !== blockedNow) { blockedNow = nb; applyBlocked(); render(); } };
+  chatsSubs.add(onB);
+  cleanup.push(() => chatsSubs.delete(onB));
+  applyBlocked();
+
+  return h('div', { class: 'screen' },
+    h('header', { class: 'top' },
+      iconBtn('back', 'رجوع', () => history.back()),
+      hdrAv,
+      h('div', { class: 'htwrap' }, title, sub),
+      iconBtn('phone', 'اتصال صوتي', () => startCall(otherUid, title.textContent, curPhoto, 'audio'), 'ib acc'),
+      iconBtn('video', 'اتصال مرئي', () => startCall(otherUid, title.textContent, curPhoto, 'video'), 'ib acc'),
+      iconBtn('more', 'المزيد', chatMenu)),
+    box, blockBar, composer);
+}
+
+/* ---------- التوجيه ---------- */
+function route() {
+  clear();
+  if (me === undefined) return;
+  if (!me) { show(authView()); return; }
+  const [p, a, b] = location.hash.slice(1).split('/');
+  if (p === 'search' || p === 'members') show(searchView());
+  else if (p === 'settings') show(settingsView());
+  else if (p === 'profile') show(profileView());
+  else if (p === 'blocked') show(blockedView());
+  else if (p === 'chat' && a) show(chatView(a, decodeURIComponent(b || '')));
+  else show(homeView());
+}
+function withTimeout(p, t) { return Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), t))]); }
+async function unregisterPush() {
+  try {
+    if (!window.NativeBridge || !window.NativeBridge.getFcmToken || !me) return;
+    const t = window.NativeBridge.getFcmToken();
+    if (t) await withTimeout(setDoc(doc(db, 'fcmTokens', me.uid), { tokens: arrayRemove(t) }, { merge: true }), 4000);
+  } catch (_) {}
+}
+async function signOutClean() { await unregisterPush(); return signOut(auth); }
+function registerPush() {
+  if (!window.NativeBridge || !window.NativeBridge.getFcmToken) return;
+  const save = t => { if (t && me) setDoc(doc(db, 'fcmTokens', me.uid), { tokens: arrayUnion(t) }, { merge: true }).catch(() => {}); };
+  window.__onFcmToken = save;
+  try { save(window.NativeBridge.getFcmToken()); } catch (_) {}
+}
+function startSession() { if (me) { watchGlobal(); registerPush(); getIceServers().catch(() => {}); } }
+app.replaceChildren(h('div', { class: 'splash' }, logoSVG(96)));
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').then(r => { swReg = r; }).catch(() => {});
+  navigator.serviceWorker.addEventListener('message', ev => { if (ev.data && typeof ev.data.hash === 'string') location.hash = ev.data.hash; });
+}
+onAuthStateChanged(auth, async u => {
+  me = u;
+  if (u) {
+    const pw = authState.pw;
+    authState.pw = '';
+    let d = null, fetched = false;
+    try { const sn = await withTimeout(getDoc(doc(db, 'users', u.uid)), 8000); d = sn.exists() ? sn.data() : {}; fetched = true; } catch (_) {}
+    profile = { name: (d && d.name) || u.displayName || profile.name || '', photo: (d && d.photo) || '' };
+    blockedSet = new Set((d && d.blocked) || []);
+    if (d && (d.email || d.emailLower)) {
+      updateDoc(doc(db, 'users', u.uid), { email: deleteField(), emailLower: deleteField() }).catch(() => {});
+    }
+    await setupKeys(u, fetched ? d : null, pw);
+    saveAccount();
+    startSession();
+  } else {
+    stopWatch();
+    dismissIncoming();
+    if (activeCall) finish(activeCall, 'ended');
+    myKeys = null;
+    profile = { name: '', photo: '' };
+    blockedSet = new Set();
+    chatsCache = [];
+    document.title = 'Mahmoud chat';
+    location.hash = '';
+  }
+  route();
+});
+addEventListener('hashchange', route);
+/* تنبيه عند العودة للتطبيق إن وصلت رسائل أثناء غيابك */
+let unreadAtHide = null;
+const totalUnread = () => chatsCache.reduce((n, c) => n + (isBlocked(otherOf(c)) ? 0 : ((c.unread && c.unread[me.uid]) || 0)), 0);
+document.addEventListener('visibilitychange', () => {
+  if (!me) return;
+  if (document.hidden) { unreadAtHide = totalUnread(); return; }
+  if (unreadAtHide === null) return;
+  const before = unreadAtHide;
+  unreadAtHide = null;
+  setTimeout(() => {
+    const diff = totalUnread() - before;
+    if (diff > 0 && notifOn()) { soundRecv(); showBanner('رسائل جديدة', 'وصلتك ' + diff + ' رسالة أثناء غيابك', '', () => { location.hash = ''; }); }
+  }, 1800);
+});
+/* فك قفل الصوت عند أول لمسة حتى تعمل الأصوات دائماً */
+['pointerdown', 'touchstart', 'keydown'].forEach(ev => addEventListener(ev, () => ac(), { passive: true }));
+</script>
+</body>
+</html>
