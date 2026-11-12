@@ -1,6 +1,6 @@
 {
-  "name": "Mahmoud chat",
-  "short_name": "Mahmoud chat",
+  "name": "SpaceMoud",
+  "short_name": "SpaceMoud",
   "description": "تطبيق مراسلة آمن",
   "start_url": "./",
   "scope": "./",
