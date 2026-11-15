@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "696004265754",
+    "project_id": "mahmoudchat-5d565",
+    "storage_bucket": "mahmoudchat-5d565.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:696004265754:android:096a4f8e4e66cba3b6cea3",
+        "android_client_info": {
+          "package_name": "com.mahmoud.chat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "696004265754-lm523rv47phn0cjgjbc3gt78bfamttmd.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mahmoud.chat",
+            "certificate_hash": "ae021d751589ff1fdfc88b534c34494185324699"
+          }
+        },
+        {
+          "client_id": "696004265754-8kiugpcacceotov0gob00r1qlnhn76cb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCz9-51RLHVbvwB5BOnFzd7X8rAAHp5NYY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "696004265754-8kiugpcacceotov0gob00r1qlnhn76cb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
