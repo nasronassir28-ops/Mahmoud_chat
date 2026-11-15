@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "696004265754",
+    "project_id": "mahmoudchat-5d565",
+    "storage_bucket": "mahmoudchat-5d565.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:696004265754:android:096a4f8e4e66cba3b6cea3",
+        "android_client_info": {
+          "package_name": "com.mahmoud.chat"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCz9-51RLHVbvwB5BOnFzd7X8rAAHp5NYY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
